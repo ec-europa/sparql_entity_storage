@@ -15,5 +15,10 @@
   },
   "require-dev": {
     "minimaxir/big-list-of-naughty-strings": "dev-master"
+  },
+  "autoload": {
+    "classmap": [
+      "driver/sparql/Connection.php"
+    ]
   }
 }
