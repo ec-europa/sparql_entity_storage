@@ -9,7 +9,6 @@ use Drupal\Core\Entity\EntityChangedInterface;
 use Drupal\Core\Entity\EntityChangedTrait;
 use Drupal\Core\Entity\EntityTypeInterface;
 use Drupal\Core\Field\BaseFieldDefinition;
-use Drupal\sparql_entity_storage\Entity\SparqlMapping;
 
 /**
  * Defines a testing entity.
@@ -43,6 +42,8 @@ class SparqlTest extends ContentEntityBase implements EntityChangedInterface {
   use EntityChangedTrait;
 
   /**
+   * The bundle.
+   *
    * @var string
    */
   protected $type;

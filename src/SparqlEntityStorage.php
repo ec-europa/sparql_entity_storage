@@ -9,9 +9,10 @@ use Drupal\Core\Cache\CacheBackendInterface;
 use Drupal\Core\Cache\MemoryCache\MemoryCacheInterface;
 use Drupal\Core\Entity\ContentEntityInterface;
 use Drupal\Core\Entity\ContentEntityStorageBase;
+use Drupal\Core\Entity\EntityFieldManagerInterface;
 use Drupal\Core\Entity\EntityInterface;
-use Drupal\Core\Entity\EntityManagerInterface;
 use Drupal\Core\Entity\EntityStorageException;
+use Drupal\Core\Entity\EntityTypeBundleInfoInterface;
 use Drupal\Core\Entity\EntityTypeInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Extension\ModuleHandlerInterface;
@@ -98,14 +99,18 @@ class SparqlEntityStorage extends ContentEntityStorageBase implements SparqlEnti
    *
    * @param \Drupal\Core\Entity\EntityTypeInterface $entity_type
    *   The entity type this storage is about.
+   * @param \Drupal\Core\Entity\EntityFieldManagerInterface $entity_field_manager
+   *   The entity field manager.
+   * @param \Drupal\Core\Cache\CacheBackendInterface $cache
+   *   The cache backend to be used.
+   * @param \Drupal\Core\Cache\MemoryCache\MemoryCacheInterface|null $memory_cache
+   *   The memory cache backend.
+   * @param \Drupal\Core\Entity\EntityTypeBundleInfoInterface $entity_type_bundle_info
+   *   The entity type bundle info.
    * @param \Drupal\sparql_entity_storage\Database\Driver\sparql\ConnectionInterface $sparql
    *   The connection object.
-   * @param \Drupal\Core\Entity\EntityManagerInterface $entity_manager
-   *   The entity manager service.
    * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entity_type_manager
    *   The entity type manager service.
-   * @param \Drupal\Core\Cache\CacheBackendInterface $cache
-   *   The cache backend service.
    * @param \Drupal\Core\Language\LanguageManagerInterface $language_manager
    *   The language manager service.
    * @param \Drupal\Core\Extension\ModuleHandlerInterface $module_handler
@@ -116,14 +121,31 @@ class SparqlEntityStorage extends ContentEntityStorageBase implements SparqlEnti
    *   The SPARQL field mapping service.
    * @param \Drupal\sparql_entity_storage\SparqlEntityStorageEntityIdPluginManager $entity_id_plugin_manager
    *   The entity ID generator plugin manager.
-   * @param \Drupal\Core\Cache\MemoryCache\MemoryCacheInterface $memory_cache
-   *   The memory cache backend.
    */
-  public function __construct(EntityTypeInterface $entity_type, ConnectionInterface $sparql, EntityManagerInterface $entity_manager, EntityTypeManagerInterface $entity_type_manager, CacheBackendInterface $cache, LanguageManagerInterface $language_manager, ModuleHandlerInterface $module_handler, SparqlEntityStorageGraphHandlerInterface $sparql_graph_handler, SparqlEntityStorageFieldHandlerInterface $sparql_field_handler, SparqlEntityStorageEntityIdPluginManager $entity_id_plugin_manager, MemoryCacheInterface $memory_cache = NULL) {
-    parent::__construct($entity_type, $entity_manager, $cache, $memory_cache);
+  public function __construct(
+    EntityTypeInterface $entity_type,
+    EntityFieldManagerInterface $entity_field_manager,
+    CacheBackendInterface $cache,
+    MemoryCacheInterface $memory_cache,
+    EntityTypeBundleInfoInterface $entity_type_bundle_info,
+    ConnectionInterface $sparql,
+    EntityTypeManagerInterface $entity_type_manager,
+    LanguageManagerInterface $language_manager,
+    ModuleHandlerInterface $module_handler,
+    SparqlEntityStorageGraphHandlerInterface $sparql_graph_handler,
+    SparqlEntityStorageFieldHandlerInterface $sparql_field_handler,
+    SparqlEntityStorageEntityIdPluginManager $entity_id_plugin_manager
+  ) {
+    // Support Drupal 8.6.x.
+    // @todo Remove this hack in #92.
+    // @see https://github.com/ec-europa/rdf_entity/issues/92
+    if (version_compare(\Drupal::VERSION, '8.7.0', '<')) {
+      $entity_field_manager = \Drupal::entityManager();
+    }
+    parent::__construct($entity_type, $entity_field_manager, $cache, $memory_cache, $entity_type_bundle_info);
     $this->sparql = $sparql;
-    $this->languageManager = $language_manager;
     $this->entityTypeManager = $entity_type_manager;
+    $this->languageManager = $language_manager;
     $this->moduleHandler = $module_handler;
     $this->graphHandler = $sparql_graph_handler;
     $this->fieldHandler = $sparql_field_handler;
@@ -136,17 +158,17 @@ class SparqlEntityStorage extends ContentEntityStorageBase implements SparqlEnti
   public static function createInstance(ContainerInterface $container, EntityTypeInterface $entity_type) {
     return new static(
       $entity_type,
-      $container->get('sparql.endpoint'),
-      $container->get('entity.manager'),
-      $container->get('entity_type.manager'),
+      $container->get('entity_field.manager'),
       $container->get('cache.entity'),
+      $container->get('entity.memory_cache'),
+      $container->get('entity_type.bundle.info'),
+      $container->get('sparql.endpoint'),
+      $container->get('entity_type.manager'),
       $container->get('language_manager'),
       $container->get('module_handler'),
       $container->get('sparql.graph_handler'),
       $container->get('sparql.field_handler'),
-      $container->get('plugin.manager.sparql_entity_id'),
-      // We support also Drupal 8.5.x.
-      $container->has('entity.memory_cache') ? $container->get('entity.memory_cache') : NULL
+      $container->get('plugin.manager.sparql_entity_id')
     );
   }
 

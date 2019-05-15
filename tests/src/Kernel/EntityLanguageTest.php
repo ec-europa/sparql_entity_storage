@@ -37,7 +37,7 @@ class EntityLanguageTest extends SparqlKernelTestBase {
 
     foreach ($langcodes as $langcode) {
       $entity->addTranslation($langcode, [
-        'title' => "$langcode translation"
+        'title' => "$langcode translation",
       ] + $entity->toArray());
     }
     $entity->save();

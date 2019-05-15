@@ -123,6 +123,22 @@ interface SparqlMappingInterface extends ConfigEntityInterface {
   public function getGraphUri(string $graph): ?string;
 
   /**
+   * Checks if this bundle has a given mapping.
+   *
+   * Returns TRUE if both, the 'predicate' and the 'format' elements of the
+   * mapping are set.
+   *
+   * @param string $field_name
+   *   The field name.
+   * @param string $column_name
+   *   (optional) The column name. Defaults to 'value'.
+   *
+   * @return bool
+   *   If the bundle maps a given field.
+   */
+  public function isMapped(string $field_name, string $column_name = 'value'): bool;
+
+  /**
    * Un-sets a list of graphs.
    *
    * @param string[] $graphs

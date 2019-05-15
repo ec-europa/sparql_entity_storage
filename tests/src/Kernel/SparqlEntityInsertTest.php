@@ -16,6 +16,8 @@ use Drupal\sparql_test\Entity\SparqlTest;
 class SparqlEntityInsertTest extends SparqlKernelTestBase {
 
   /**
+   * Field names.
+   *
    * @var string[]
    */
   const FIELDS = [
@@ -131,7 +133,7 @@ class SparqlEntityInsertTest extends SparqlKernelTestBase {
    * Since SPARQL does not support deltas yet, this method will sort the values
    * so that they can be comparable.
    *
-   * @param \Drupal\rdf_entity\RdfInterface $entity
+   * @param \Drupal\Core\Entity\ContentEntityInterface $entity
    *   The entity object.
    * @param string $field_name
    *   The field name.
