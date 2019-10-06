@@ -21,6 +21,7 @@ use Drupal\Core\Language\LanguageInterface;
 use Drupal\Core\Language\LanguageManagerInterface;
 use Drupal\sparql_entity_storage\Database\Driver\sparql\ConnectionInterface;
 use Drupal\sparql_entity_storage\Entity\Query\Sparql\SparqlArg;
+use Drupal\sparql_entity_storage\Entity\SparqlGraph;
 use Drupal\sparql_entity_storage\Exception\DuplicatedIdException;
 use EasyRdf\Graph;
 use EasyRdf\Literal;
@@ -184,6 +185,19 @@ class SparqlEntityStorage extends ContentEntityStorageBase implements SparqlEnti
   protected static function getGraph($graph_uri) {
     $graph = new Graph($graph_uri);
     return $graph;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function create(array $values = []) {
+    /** @var \Drupal\Core\Entity\ContentEntityInterface $entity */
+    $entity = parent::create($values);
+    // Ensure the default graph if no explicit graph has been set.
+    if ($entity->get('graph')->isEmpty()) {
+      $entity->set('graph', SparqlGraph::DEFAULT);
+    }
+    return $entity;
   }
 
   /**
