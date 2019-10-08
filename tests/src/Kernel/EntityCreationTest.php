@@ -4,6 +4,8 @@ declare(strict_types = 1);
 
 namespace Drupal\Tests\sparql_entity_storage\Kernel;
 
+use Drupal\rdf_entity\RdfInterface;
+use Drupal\sparql_entity_storage\Entity\SparqlGraph;
 use Drupal\sparql_entity_storage\Exception\DuplicatedIdException;
 use Drupal\sparql_test\Entity\SparqlTest;
 
@@ -47,6 +49,33 @@ class EntityCreationTest extends SparqlKernelTestBase {
       'id' => 'http://example.com/apple',
       'title' => "This fruit tries to steal the Apple's ID",
     ])->save();
+  }
+
+  /**
+   * Tests that the default graph is set on entity creation.
+   *
+   * @covers ::create
+   */
+  public function testDefaultGraphSetOnCreate(): void {
+    // Check that the default graph is set when no graph is specified.
+    $entity = SparqlTest::create([
+      'type' => 'waffle',
+      'id' => 'http://example.com/kempense-galet',
+      'title' => 'Kempense galet',
+    ]);
+
+    $this->assertEquals(SparqlGraph::DEFAULT, $entity->get('graph')->target_id);
+
+    // Check that it is possible to specify a custom graph.
+    /** @var \Drupal\rdf_entity\RdfInterface $entity */
+    $entity = SparqlTest::create([
+      'type' => 'waffle',
+      'id' => 'http://example.com/liege-waffle',
+      'title' => 'Liège waffle',
+      'graph' => 'custom_graph',
+    ]);
+
+    $this->assertEquals('custom_graph', $entity->get('graph')->target_id);
   }
 
 }
