@@ -22,7 +22,7 @@ class SparqlGraphTest extends SparqlKernelTestBase {
   /**
    * Tests graphs.
    */
-  public function test(): void {
+  public function testSparqlGraphs(): void {
     /** @var \Drupal\Core\Entity\EntityTypeManagerInterface $manager */
     $manager = $this->container->get('entity_type.manager');
     /** @var \Drupal\sparql_entity_storage\SparqlEntityStorage $storage */
