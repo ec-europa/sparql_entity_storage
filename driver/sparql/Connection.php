@@ -123,7 +123,7 @@ class Connection implements ConnectionInterface {
    * @throws \InvalidArgumentException
    *   If $args value is passed but arguments replacement is not yet
    *   supported. To be removed in #55.
-   * @throws SparqlQueryException
+   * @throws \Drupal\sparql_entity_storage\Exception\SparqlQueryException
    *   Exception during query execution, e.g. timeout.
    *
    * @see https://github.com/ec-europa/sparql_entity_storage/issues/1

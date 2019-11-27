@@ -19,8 +19,18 @@ class SparqlDataCollector extends DataCollector implements DrupalDataCollectorIn
 
   use StringTranslationTrait, DrupalDataCollectorTrait;
 
+  /**
+   * The connection class.
+   *
+   * @var \Drupal\sparql_entity_storage\Database\Driver\sparql\ConnectionInterface
+   */
   private $database;
 
+  /**
+   * The config factory service.
+   *
+   * @var \Drupal\Core\Config\ConfigFactoryInterface
+   */
   private $configFactory;
 
   /**

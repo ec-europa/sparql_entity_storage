@@ -4,7 +4,6 @@ declare(strict_types = 1);
 
 namespace Drupal\Tests\sparql_entity_storage\Kernel;
 
-use Drupal\rdf_entity\RdfInterface;
 use Drupal\sparql_entity_storage\Entity\SparqlGraph;
 use Drupal\sparql_entity_storage\Exception\DuplicatedIdException;
 use Drupal\sparql_test\Entity\SparqlTest;
