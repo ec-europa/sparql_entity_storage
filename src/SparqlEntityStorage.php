@@ -137,12 +137,6 @@ class SparqlEntityStorage extends ContentEntityStorageBase implements SparqlEnti
     SparqlEntityStorageFieldHandlerInterface $sparql_field_handler,
     SparqlEntityStorageEntityIdPluginManager $entity_id_plugin_manager
   ) {
-    // Support Drupal 8.6.x.
-    // @todo Remove this hack in #92.
-    // @see https://github.com/ec-europa/rdf_entity/issues/92
-    if (version_compare(\Drupal::VERSION, '8.7.0', '<')) {
-      $entity_field_manager = \Drupal::entityManager();
-    }
     parent::__construct($entity_type, $entity_field_manager, $cache, $memory_cache, $entity_type_bundle_info);
     $this->sparql = $sparql;
     $this->entityTypeManager = $entity_type_manager;
@@ -156,7 +150,7 @@ class SparqlEntityStorage extends ContentEntityStorageBase implements SparqlEnti
   /**
    * {@inheritdoc}
    */
-  public static function createInstance(ContainerInterface $container, EntityTypeInterface $entity_type) {
+  public static function createInstance(ContainerInterface $container, EntityTypeInterface $entity_type): self {
     return new static(
       $entity_type,
       $container->get('entity_field.manager'),
@@ -190,7 +184,7 @@ class SparqlEntityStorage extends ContentEntityStorageBase implements SparqlEnti
   /**
    * {@inheritdoc}
    */
-  public function create(array $values = []) {
+  public function create(array $values = []): ContentEntityInterface {
     /** @var \Drupal\Core\Entity\ContentEntityInterface $entity */
     $entity = parent::create($values);
     // Ensure the default graph if no explicit graph has been set.
@@ -324,11 +318,11 @@ class SparqlEntityStorage extends ContentEntityStorageBase implements SparqlEnti
     // @see https://github.com/ec-europa/sparql_entity_storage/issues/2
     $query = <<<QUERY
 SELECT ?graph ?entity_id ?predicate ?field_value
-$named_graph
+{$named_graph}
 WHERE{
   GRAPH ?graph {
     ?entity_id ?predicate ?field_value .
-    VALUES ?entity_id { $ids_string } .
+    VALUES ?entity_id { {$ids_string} } .
   }
 }
 QUERY;
@@ -410,6 +404,7 @@ QUERY;
               continue;
             }
 
+            /** @var string  $field_name */
             $column = $inbound_map['fields'][$predicate][$bundle]['column'];
             foreach ($field as $lang => $items) {
               $langcode_key = ($lang === $default_language) ? LanguageInterface::LANGCODE_DEFAULT : $lang;
@@ -751,7 +746,7 @@ QUERY;
     /** @var string $id */
     /** @var \Drupal\Core\Entity\ContentEntityInterface $entity */
     foreach ($entities as $id => $entity) {
-      $graph_uri = $this->getGraphHandler()->getBundleGraphUri($entity->getEntityTypeId(), $entity->bundle(), $entity->graph->target_id);
+      $graph_uri = $this->getGraphHandler()->getBundleGraphUri($entity->getEntityTypeId(), $entity->bundle(), (string) $entity->get('graph')->target_id);
       $entities_by_graph[$graph_uri][$id] = $entity;
     }
     foreach ($entities_by_graph as $graph_uri => $entities_to_delete) {
@@ -767,8 +762,6 @@ QUERY;
    * @param string $graph_uri
    *   The graph URI to delete from.
    *
-   * @throws \Drupal\sparql_entity_storage\Exception\SparqlQueryException
-   *   If the SPARQL query fails.
    * @throws \Exception
    *   The query fails with no specific reason.
    */
@@ -776,7 +769,7 @@ QUERY;
     $entity_list = SparqlArg::serializeUris(array_keys($entities));
 
     $query = <<<QUERY
-DELETE FROM <$graph_uri>
+DELETE FROM <{$graph_uri}>
 {
   ?entity ?field ?value
 }
@@ -784,7 +777,7 @@ WHERE
 {
   ?entity ?field ?value
   FILTER(
-    ?entity IN ($entity_list)
+    ?entity IN ( {$entity_list} )
   )
 }
 QUERY;
@@ -1148,7 +1141,7 @@ QUERY;
   protected function setStaticCache(array $entities) {
     if ($this->entityType->isStaticallyCacheable()) {
       foreach ($entities as $id => $entity) {
-        $this->entities[$id][$entity->graph->target_id] = $entity;
+        $this->entities[$id][$entity->get('graph')->target_id] = $entity;
       }
     }
   }
@@ -1261,14 +1254,14 @@ QUERY;
     $graph_uri = SparqlArg::uri($graph_uri);
     $query = <<<QUERY
 DELETE {
-  GRAPH $graph_uri {
-    $id ?field ?value
+  GRAPH {$graph_uri} {
+    {$id} ?field ?value
   }
 }
 WHERE {
-  GRAPH $graph_uri {
-    $id ?field ?value .
-    FILTER (?field IN ($serialized))
+  GRAPH {$graph_uri} {
+    {$id} ?field ?value .
+    FILTER (?field IN ( {$serialized} ))
   }
 }
 QUERY;
