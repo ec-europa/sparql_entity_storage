@@ -269,7 +269,8 @@ class SparqlEntityStorage extends ContentEntityStorageBase implements SparqlEnti
               }
             }
           }
-          $entity = new $this->entityClass($entity_values, $this->entityTypeId, $bundle, $translations);
+          $entity_class = $this->getEntityClass($bundle);
+          $entity = new $entity_class($entity_values, $this->entityTypeId, $bundle, $translations);
           $this->trackOriginalGraph($entity);
           $entities[$id] = $entity;
         }
