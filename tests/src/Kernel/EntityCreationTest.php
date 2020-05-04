@@ -41,7 +41,8 @@ class EntityCreationTest extends SparqlKernelTestBase {
 
     // Check that the expected exception is throw when trying to create a new
     // entity with the same ID.
-    $this->setExpectedException(DuplicatedIdException::class, "Attempting to create a new entity with the ID 'http://example.com/apple' already taken.");
+    $this->expectException(DuplicatedIdException::class);
+    $this->expectExceptionMessage("Attempting to create a new entity with the ID 'http://example.com/apple' already taken.");
     SparqlTest::create([
       'type' => 'fruit',
       'id' => 'http://example.com/apple',
