@@ -128,7 +128,8 @@ class SparqlGraphTest extends SparqlKernelTestBase {
     $this->assertNotContains('non_existing_graph', $default_graphs);
 
     // Try to request the entity from a non-existing graph.
-    $this->setExpectedException(\InvalidArgumentException::class, "Graph 'invalid graph' doesn't exist for entity type 'sparql_test'.");
+    $this->expectException(\InvalidArgumentException::class);
+    $this->expectExceptionMessage("Graph 'invalid graph' doesn't exist for entity type 'sparql_test'.");
     $storage->load($id, ['invalid graph', 'default', 'foo']);
   }
 
