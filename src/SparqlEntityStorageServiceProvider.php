@@ -11,7 +11,7 @@ use Symfony\Component\DependencyInjection\Compiler\PassConfig;
 /**
  * RDF Entity dependency injection container.
  */
-class SparqlEntityServiceProvider implements ServiceProviderInterface {
+class SparqlEntityStorageServiceProvider implements ServiceProviderInterface {
 
   /**
    * {@inheritdoc}

@@ -1,9 +1,11 @@
 <?php
 
+declare(strict_types = 1);
+
 namespace Drupal\Tests\sparql_entity_storage\Kernel;
 
 use Drupal\KernelTests\KernelTestBase;
-use Drupal\sparql_test\Entity\SparqlTest;
+use Drupal\sparql_serialization_test\Entity\SimpleSparqlTest;
 use Drupal\Tests\sparql_entity_storage\Traits\SparqlConnectionTrait;
 
 /**
@@ -19,19 +21,14 @@ class SparqlSerializerTest extends KernelTestBase {
    * {@inheritdoc}
    */
   protected static $modules = [
-    'rdf_taxonomy',
-    'rest',
-    'serialization',
-    'sparql_entity_serializer_test',
     'sparql_entity_storage',
-    'taxonomy',
-    'user',
+    'sparql_serialization_test',
   ];
 
   /**
    * {@inheritdoc}
    */
-  protected function bootEnvironment() {
+  protected function bootEnvironment(): void {
     parent::bootEnvironment();
     $this->setUpSparql();
   }
@@ -39,19 +36,19 @@ class SparqlSerializerTest extends KernelTestBase {
   /**
    * {@inheritdoc}
    */
-  protected function setUp() {
+  protected function setUp(): void {
     parent::setUp();
-    $this->installConfig(['sparql_entity_storage', 'sparql_entity_serializer_test']);
+    $this->installConfig(['sparql_entity_storage', 'sparql_serialization_test']);
   }
 
   /**
    * Tests content negotiation.
    */
-  public function testContentNegotiation() {
-    $entity = SparqlTest::create([
-      'rid' => 'fruit',
+  public function testContentNegotiation(): void {
+    $entity = SimpleSparqlTest::create([
+      'type' => 'fruit',
       'id' => 'http://example.com/apple',
-      'label' => 'Apple',
+      'title' => 'Apple',
     ]);
     $entity->save();
 
@@ -68,7 +65,7 @@ class SparqlSerializerTest extends KernelTestBase {
    * {@inheritdoc}
    */
   public function tearDown() {
-    SparqlTest::load('http://example.com/apple')->delete();
+    SimpleSparqlTest::load('http://example.com/apple')->delete();
     parent::tearDown();
   }
 
