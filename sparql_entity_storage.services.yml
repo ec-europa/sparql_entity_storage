@@ -79,7 +79,7 @@ services:
     tags:
       - { name: encoder, format: n3 }
   sparql.entity_normalizer:
-    class: Drupal\rdf_entity\Normalizer\SparqlEntityNormalizer
+    class: Drupal\sparql_entity_storage\Normalizer\SparqlEntityNormalizer
     arguments: ['@sparql_entity.serializer', '@entity_type.manager']
     tags:
       - { name: normalizer, priority: 10 }
