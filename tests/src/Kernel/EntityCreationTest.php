@@ -4,7 +4,6 @@ declare(strict_types = 1);
 
 namespace Drupal\Tests\sparql_entity_storage\Kernel;
 
-use Drupal\rdf_entity\RdfInterface;
 use Drupal\sparql_entity_storage\Entity\SparqlGraph;
 use Drupal\sparql_entity_storage\Exception\DuplicatedIdException;
 use Drupal\sparql_test\Entity\SparqlTest;
@@ -34,7 +33,7 @@ class EntityCreationTest extends SparqlKernelTestBase {
     // Check that on saving an existing entity no exception is thrown.
     SparqlTest::load('http://example.com/apple')->save();
 
-    // Check that new rdf_entity, with its own ID, don't raise any exception.
+    // Check that new test entity, with its own ID, don't raise any exception.
     SparqlTest::create([
       'type' => 'fruit',
       'id' => 'http://example.com/berry',
@@ -68,7 +67,6 @@ class EntityCreationTest extends SparqlKernelTestBase {
     $this->assertEquals(SparqlGraph::DEFAULT, $entity->get('graph')->target_id);
 
     // Check that it is possible to specify a custom graph.
-    /** @var \Drupal\rdf_entity\RdfInterface $entity */
     $entity = SparqlTest::create([
       'type' => 'waffle',
       'id' => 'http://example.com/liege-waffle',
