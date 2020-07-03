@@ -3,13 +3,13 @@
 namespace Drupal\Tests\sparql_entity_storage\Kernel;
 
 use Drupal\KernelTests\KernelTestBase;
-use Drupal\rdf_entity\Entity\Rdf;
+use Drupal\sparql_test\Entity\SparqlTest;
 use Drupal\Tests\sparql_entity_storage\Traits\SparqlConnectionTrait;
 
 /**
  * Tests the SPARQL serializer.
  *
- * @group rdf_entity
+ * @group sparql_entity_storage
  */
 class SparqlSerializerTest extends KernelTestBase {
 
@@ -19,7 +19,6 @@ class SparqlSerializerTest extends KernelTestBase {
    * {@inheritdoc}
    */
   protected static $modules = [
-    'rdf_entity',
     'rdf_taxonomy',
     'rest',
     'serialization',
@@ -49,7 +48,7 @@ class SparqlSerializerTest extends KernelTestBase {
    * Tests content negotiation.
    */
   public function testContentNegotiation() {
-    $entity = Rdf::create([
+    $entity = SparqlTest::create([
       'rid' => 'fruit',
       'id' => 'http://example.com/apple',
       'label' => 'Apple',
@@ -69,7 +68,7 @@ class SparqlSerializerTest extends KernelTestBase {
    * {@inheritdoc}
    */
   public function tearDown() {
-    Rdf::load('http://example.com/apple')->delete();
+    SparqlTest::load('http://example.com/apple')->delete();
     parent::tearDown();
   }
 

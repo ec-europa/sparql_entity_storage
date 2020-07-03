@@ -4,7 +4,7 @@ declare(strict_types = 1);
 
 namespace Drupal\sparql_entity_storage\Encoder;
 
-use Drupal\rdf_entity\SparqlEncoderInterface;
+use Drupal\sparql_entity_storage\SparqlEncoderInterface;
 use EasyRdf\Format;
 
 /**

@@ -34,7 +34,7 @@ class SparqlEntityQueryTest extends SparqlKernelTestBase {
   /**
    * Dummy reference entities.
    *
-   * @var \Drupal\rdf_entity\RdfInterface[]
+   * @var \Drupal\sparql_test\Entity\SparqlTest[]
    */
   protected $entities;
 
