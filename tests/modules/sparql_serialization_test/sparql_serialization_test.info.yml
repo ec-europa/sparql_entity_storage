@@ -1,4 +1,5 @@
 type: module
+core: 8.x
 name: 'SPARQL Serialization Test'
 description: 'Support module for testing sparql_entity_storage module.'
 package: Testing
