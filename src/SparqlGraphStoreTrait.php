@@ -18,7 +18,7 @@ trait SparqlGraphStoreTrait {
    * @return \EasyRdf\GraphStore
    *   The new graph store object.
    */
-  protected function createGraphStore(): GraphStore {
+  public static function createGraphStore(): GraphStore {
     $sparql_connection = Database::getConnection('default', 'sparql_default');
     $connection_options = $sparql_connection->getConnectionOptions();
     $connect_string = "http://{$connection_options['host']}:{$connection_options['port']}/sparql-graph-crud";
