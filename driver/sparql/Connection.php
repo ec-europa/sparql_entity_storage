@@ -340,7 +340,7 @@ class Connection implements ConnectionInterface {
    */
   public static function createConnectionOptionsFromUrl($url, $root) {
     $url_components = parse_url($url);
-    if (!isset($url_components['scheme'], $url_components['host'], $url_components['path'])) {
+    if (!isset($url_components['scheme'], $url_components['host'])) {
       throw new \InvalidArgumentException('Minimum requirement: driver://host/database');
     }
 
