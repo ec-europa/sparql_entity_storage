@@ -341,38 +341,25 @@ class Connection implements ConnectionInterface {
   public static function createConnectionOptionsFromUrl($url, $root) {
     $url_components = parse_url($url);
     if (!isset($url_components['scheme'], $url_components['host'])) {
-      throw new \InvalidArgumentException('Minimum requirement: driver://host/database');
+      throw new \InvalidArgumentException('Minimum requirement: driver://host');
     }
 
     $url_components += [
       'user' => '',
       'pass' => '',
-      'fragment' => '',
     ];
-
-    // Remove leading slash from the URL path.
-    if ($url_components['path'][0] === '/') {
-      $url_components['path'] = substr($url_components['path'], 1);
-    }
 
     // Use reflection to get the namespace of the class being called.
     $reflector = new \ReflectionClass(get_called_class());
 
     $database = [
-      'driver' => $url_components['scheme'],
-      'username' => $url_components['user'],
-      'password' => $url_components['pass'],
       'host' => $url_components['host'],
-      'database' => $url_components['path'],
       'namespace' => $reflector->getNamespaceName(),
+      'driver' => $url_components['scheme'],
     ];
 
     if (isset($url_components['port'])) {
       $database['port'] = $url_components['port'];
-    }
-
-    if (!empty($url_components['fragment'])) {
-      $database['prefix']['default'] = $url_components['fragment'];
     }
 
     return $database;
