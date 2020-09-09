@@ -382,7 +382,7 @@ class SparqlCondition extends ConditionFundamentals implements ConditionInterfac
           $this->fieldMappingConditions[] = [
             'field' => $condition['field'],
             'column' => $condition['column'],
-            'value' => array_values($mappings),
+            'value' => array_unique(array_values($mappings)),
             'operator' => 'IN',
           ];
         }
