@@ -710,9 +710,12 @@ QUERY;
       $keyed_entities[$entity->id()] = $entity;
     }
 
+    $entity_classes = $this->getEntityClasses($keyed_entities);
+
     // Allow code to run before deleting.
-    $entity_class = $this->entityClass;
-    $entity_class::preDelete($this, $keyed_entities);
+    foreach ($entity_classes as $entity_class => &$items) {
+      $entity_class::preDelete($this, $items);
+    }
     foreach ($keyed_entities as $entity) {
       $this->invokeHook('predelete', $entity);
     }
@@ -733,7 +736,9 @@ QUERY;
     $this->resetCache(array_keys($keyed_entities), array_keys($graphs));
 
     // Allow code to run after deleting.
-    $entity_class::postDelete($this, $keyed_entities);
+    foreach ($entity_classes as $entity_class => &$items) {
+      $entity_class::postDelete($this, $items);
+    }
     foreach ($keyed_entities as $entity) {
       $this->invokeHook('delete', $entity);
     }
