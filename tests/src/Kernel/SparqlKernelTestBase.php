@@ -28,9 +28,16 @@ class SparqlKernelTestBase extends KernelTestBase {
   /**
    * {@inheritdoc}
    */
+  protected function bootEnvironment() {
+    parent::bootEnvironment();
+    $this->setUpSparql();
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   protected function setUp(): void {
     parent::setUp();
-    $this->setUpSparql();
     $this->installConfig(['sparql_entity_storage', 'sparql_test']);
   }
 

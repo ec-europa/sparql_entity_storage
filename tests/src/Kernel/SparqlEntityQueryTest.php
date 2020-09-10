@@ -34,7 +34,7 @@ class SparqlEntityQueryTest extends SparqlKernelTestBase {
   /**
    * Dummy reference entities.
    *
-   * @var \Drupal\rdf_entity\RdfInterface[]
+   * @var \Drupal\sparql_test\Entity\SparqlTest[]
    */
   protected $entities;
 
@@ -162,28 +162,32 @@ class SparqlEntityQueryTest extends SparqlKernelTestBase {
     $this->assertResult('http://vegetable.example.com/001');
 
     // Try to fetch a NULL ID.
-    $this->setExpectedException('Exception', 'The value cannot be NULL for conditions related to the Id and bundle keys.');
+    $this->expectException(\Exception::class);
+    $this->expectExceptionMessage('The value cannot be NULL for conditions related to the Id and bundle keys.');
     $this->results = $this->getQuery()
       ->condition('id', NULL)
       ->condition('type', 'vegetable')
       ->execute();
 
     // Try to filter ID with an invalid operator.
-    $this->setExpectedException('Exception', "Only '=', '!=', '<>', 'IN', 'NOT IN' operators are allowed for the Id and bundle keys.");
+    $this->expectException(\Exception::class);
+    $this->expectExceptionMessage("Only '=', '!=', '<>', 'IN', 'NOT IN' operators are allowed for the Id and bundle keys.");
     $this->results = $this->getQuery()
       ->condition('id', 'http://vegetable.example.com/003', 'LIKE')
       ->condition('type', 'vegetable')
       ->execute();
 
     // Try to fetch a NULL bundle.
-    $this->setExpectedException('Exception', 'The value cannot be NULL for conditions related to the Id and bundle keys.');
+    $this->expectException(\Exception::class);
+    $this->expectExceptionMessage('The value cannot be NULL for conditions related to the Id and bundle keys.');
     $this->results = $this->getQuery()
       ->condition('id', 'http://vegetable.example.com/002')
       ->condition('type', NULL)
       ->execute();
 
     // Try to filter bundle with an invalid operator.
-    $this->setExpectedException('Exception', "Only '=', '!=', '<>', 'IN', 'NOT IN' operators are allowed for the Id and bundle keys.");
+    $this->expectException(\Exception::class);
+    $this->expectExceptionMessage("Only '=', '!=', '<>', 'IN', 'NOT IN' operators are allowed for the Id and bundle keys.");
     $this->results = $this->getQuery()
       ->condition('id', 'http://vegetable.example.com/003')
       ->condition('type', 'multi', 'STARTS WITH')
