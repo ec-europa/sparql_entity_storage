@@ -348,6 +348,24 @@ class SparqlEntityQueryTest extends SparqlKernelTestBase {
       ->execute();
     $this->assertResult('http://fruit.example.com/009', 'http://fruit.example.com/007', 'http://fruit.example.com/005', 'http://fruit.example.com/003', 'http://fruit.example.com/001', 'http://fruit.example.com/010', 'http://fruit.example.com/008', 'http://fruit.example.com/006', 'http://fruit.example.com/004', 'http://fruit.example.com/002');
 
+    // Test the bundle key as it is a separate special case along with the id.
+    $sub_query = $this->getQuery()->orConditionGroup();
+    $sub_query
+      ->condition('id', 'http://fruit.example.com/009')
+      ->condition('id', 'http://vegetable.example.com/003');
+
+    $this->results = $this->getQuery()
+      ->condition($sub_query)
+      ->sort('type')
+      ->execute();
+    $this->assertResult('http://fruit.example.com/009', 'http://vegetable.example.com/003');
+
+    $this->results = $this->getQuery()
+      ->condition('text', 'some text')
+      ->sort('type', 'DESC')
+      ->execute();
+    $this->assertResult('http://fruit.example.com/009', 'http://vegetable.example.com/003');
+
     // Invalid directions are not allowed.
     $this->expectException(\RuntimeException::class);
     $this->expectExceptionMessage('Only "ASC" and "DESC" are allowed as sort order.');
