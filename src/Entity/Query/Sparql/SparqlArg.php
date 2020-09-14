@@ -138,4 +138,26 @@ class SparqlArg {
     return $serializer->serialiseValue($data);
   }
 
+  /**
+   * Prefixes a keyword with a prefix in order to be treated as a variable.
+   *
+   * @param string $key
+   *   The name of the variable.
+   * @param bool $blank
+   *   Whether or not to be a blank note.
+   *
+   * @return string
+   *   The variable.
+   */
+  public static function toVar($key, $blank = FALSE) {
+    // Deal with field.property as dots are not allowed in var names.
+    $key = str_replace('.', '_', $key);
+    if (strpos($key, '?') === FALSE && strpos($key, '_:') === FALSE) {
+      return ($blank ? '_:' : '?') . $key;
+    }
+
+    // Do not alter the string if it is already prefixed as a variable.
+    return $key;
+  }
+
 }
