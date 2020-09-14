@@ -203,7 +203,7 @@ class SparqlCondition extends ConditionFundamentals implements ConditionInterfac
     $this->fieldMappingConditions = [];
     $this->fieldMappings = [
       $this->idKey => self::ID_KEY,
-      $this->bundleKey => count($this->typePredicate) === 1 ? reset($this->typePredicate) : $this->toVar($this->bundleKey . '_predicate'),
+      $this->bundleKey => count($this->typePredicate) === 1 ? reset($this->typePredicate) : SparqlArg::toVar($this->bundleKey . '_predicate'),
     ];
   }
 
@@ -428,7 +428,7 @@ class SparqlCondition extends ConditionFundamentals implements ConditionInterfac
     foreach ($this->fieldMappingConditions as $condition) {
       $field_name = $condition['field'] . '__' . $condition['column'];
       $field_predicate = $this->fieldMappings[$field_name];
-      $this->addConditionFragment(self::ID_KEY . ' ' . $this->escapePredicate($field_predicate) . ' ' . $this->toVar($field_name));
+      $this->addConditionFragment(self::ID_KEY . ' ' . $this->escapePredicate($field_predicate) . ' ' . SparqlArg::toVar($field_name));
       $condition['value'] = SparqlArg::toResourceUris($condition['value']);
       $condition['field'] = $field_predicate;
       $this->addConditionFragment($this->compileValuesFilter($condition));
@@ -471,7 +471,7 @@ class SparqlCondition extends ConditionFundamentals implements ConditionInterfac
         $predicate = $this->fieldMappings[$field_name];
         // In case the operator is not '=', add a support triple pattern.
         if (in_array($condition['operator'], $this->requiresDefaultPatternOperators) && isset($this->fieldMappings[$field_name])) {
-          $this->addConditionFragment(self::ID_KEY . ' ' . $this->escapePredicate($this->fieldMappings[$field_name]) . ' ' . $this->toVar($field_name));
+          $this->addConditionFragment(self::ID_KEY . ' ' . $this->escapePredicate($this->fieldMappings[$field_name]) . ' ' . SparqlArg::toVar($field_name));
         }
       }
 
@@ -554,7 +554,7 @@ class SparqlCondition extends ConditionFundamentals implements ConditionInterfac
    */
   protected function compileBundleCondition($condition) {
     if (count($this->typePredicate) > 1) {
-      $this->addConditionFragment(self::ID_KEY . ' ' . $this->escapePredicate($this->fieldMappings[$condition['field']]) . ' ' . $this->toVar($condition['field']));
+      $this->addConditionFragment(self::ID_KEY . ' ' . $this->escapePredicate($this->fieldMappings[$condition['field']]) . ' ' . SparqlArg::toVar($condition['field']));
       $this->addConditionFragment($this->compileValuesFilter([
         'field' => $this->escapePredicate($this->fieldMappings[$condition['field']]),
         'value' => SparqlArg::toResourceUris($this->typePredicate),
@@ -562,7 +562,7 @@ class SparqlCondition extends ConditionFundamentals implements ConditionInterfac
       ]));
     }
     else {
-      $this->addConditionFragment(self::ID_KEY . ' ' . $this->escapePredicate($this->fieldMappings[$condition['field']]) . ' ' . $this->toVar($condition['field']));
+      $this->addConditionFragment(self::ID_KEY . ' ' . $this->escapePredicate($this->fieldMappings[$condition['field']]) . ' ' . SparqlArg::toVar($condition['field']));
       $this->fieldMappings[$this->bundleKey] = reset($this->typePredicate);
     }
   }
@@ -579,7 +579,7 @@ class SparqlCondition extends ConditionFundamentals implements ConditionInterfac
   protected function compileExists(array $condition) {
     $prefix = self::$filterOperatorMap[$condition['operator']]['prefix'];
     $suffix = self::$filterOperatorMap[$condition['operator']]['suffix'];
-    return $prefix . self::ID_KEY . ' ' . $this->escapePredicate($this->fieldMappings[$condition['field']]) . ' ' . $this->toVar($condition['field']) . $suffix;
+    return $prefix . self::ID_KEY . ' ' . $this->escapePredicate($this->fieldMappings[$condition['field']]) . ' ' . SparqlArg::toVar($condition['field']) . $suffix;
   }
 
   /**
@@ -594,7 +594,7 @@ class SparqlCondition extends ConditionFundamentals implements ConditionInterfac
   protected function compileLike(array $condition) {
     $prefix = self::$filterOperatorMap[$condition['operator']]['prefix'];
     $suffix = self::$filterOperatorMap[$condition['operator']]['suffix'];
-    $value = 'lcase(str(' . $this->toVar($condition['field']) . ')), lcase(str(' . $condition['value'] . '))';
+    $value = 'lcase(str(' . SparqlArg::toVar($condition['field']) . ')), lcase(str(' . $condition['value'] . '))';
     return $prefix . $value . $suffix;
   }
 
@@ -613,7 +613,7 @@ class SparqlCondition extends ConditionFundamentals implements ConditionInterfac
   protected function compileFilter(array $condition) {
     $prefix = self::$filterOperatorMap[$condition['operator']]['prefix'];
     $suffix = self::$filterOperatorMap[$condition['operator']]['suffix'];
-    $condition['field'] = $this->toVar($condition['field']);
+    $condition['field'] = SparqlArg::toVar($condition['field']);
     $operators = ['<', '>', '<=', '>='];
     // If the id is compared as a string, we need to convert it to one.
     if ($condition['field'] === $this->fieldMappings[$this->idKey] && in_array($condition['operator'], $operators)) {
@@ -648,7 +648,7 @@ class SparqlCondition extends ConditionFundamentals implements ConditionInterfac
     else {
       $value = $condition['value'];
     }
-    return 'VALUES ' . $this->toVar($condition['field']) . ' {' . implode(' ', $value) . '}';
+    return 'VALUES ' . SparqlArg::toVar($condition['field']) . ' {' . implode(' ', $value) . '}';
   }
 
   /**
@@ -724,28 +724,6 @@ class SparqlCondition extends ConditionFundamentals implements ConditionInterfac
   }
 
   /**
-   * Prefixes a keyword with a prefix in order to be treated as a variable.
-   *
-   * @param string $key
-   *   The name of the variable.
-   * @param bool $blank
-   *   Whether or not to be a blank note.
-   *
-   * @return string
-   *   The variable.
-   */
-  protected function toVar($key, $blank = FALSE) {
-    // Deal with field.property as dots are not allowed in var names.
-    $key = str_replace('.', '_', $key);
-    if (strpos($key, '?') === FALSE && strpos($key, '_:') === FALSE) {
-      return ($blank ? '_:' : '?') . $key;
-    }
-
-    // Do not alter the string if it is already prefixed as a variable.
-    return $key;
-  }
-
-  /**
    * Escape the predicate.
    *
    * If the value is a uri, convert it to a resource. If it is not a uri,
@@ -761,7 +739,7 @@ class SparqlCondition extends ConditionFundamentals implements ConditionInterfac
     if (SparqlArg::isValidResource($field_name)) {
       return SparqlArg::uri($field_name);
     }
-    return $this->toVar($field_name);
+    return SparqlArg::toVar($field_name);
   }
 
   /**
