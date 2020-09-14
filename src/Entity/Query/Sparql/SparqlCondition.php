@@ -96,16 +96,6 @@ class SparqlCondition extends ConditionFundamentals implements ConditionInterfac
   ];
 
   /**
-   * Whether the conditions have been changed.
-   *
-   * TRUE if the condition has been changed since the last compile.
-   * FALSE if the condition has been compiled and not changed.
-   *
-   * @var bool
-   */
-  protected $needsRecompile = TRUE;
-
-  /**
    * Whether the default triple pattern is required in the query.
    *
    * This will be turned to false if there is at least one condition that does
