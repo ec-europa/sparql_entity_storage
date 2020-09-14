@@ -309,6 +309,52 @@ class SparqlEntityQueryTest extends SparqlKernelTestBase {
   }
 
   /**
+   * Tests sorting and order mechanisms.
+   */
+  public function testSortOrder() {
+    // Sort without direction. Defaults to ASC.
+    $this->results = $this->getQuery()
+      ->condition('type', 'fruit')
+      ->sort('text')
+      ->execute();
+    $this->assertResult('http://fruit.example.com/001', 'http://fruit.example.com/003', 'http://fruit.example.com/005', 'http://fruit.example.com/007', 'http://fruit.example.com/009', 'http://fruit.example.com/002', 'http://fruit.example.com/004', 'http://fruit.example.com/006', 'http://fruit.example.com/008', 'http://fruit.example.com/010');
+
+    // Sort by ascending direction.
+    $this->results = $this->getQuery()
+      ->condition('type', 'fruit')
+      ->sort('text', 'ASC')
+      ->execute();
+    $this->assertResult('http://fruit.example.com/001', 'http://fruit.example.com/003', 'http://fruit.example.com/005', 'http://fruit.example.com/007', 'http://fruit.example.com/009', 'http://fruit.example.com/002', 'http://fruit.example.com/004', 'http://fruit.example.com/006', 'http://fruit.example.com/008', 'http://fruit.example.com/010');
+
+    // Sort by descending direction.
+    $this->results = $this->getQuery()
+      ->condition('type', 'fruit')
+      ->sort('text', 'DESC')
+      ->execute();
+    $this->assertResult('http://fruit.example.com/002', 'http://fruit.example.com/004', 'http://fruit.example.com/006', 'http://fruit.example.com/008', 'http://fruit.example.com/010', 'http://fruit.example.com/001', 'http://fruit.example.com/003', 'http://fruit.example.com/005', 'http://fruit.example.com/007', 'http://fruit.example.com/009');
+
+    // Test multiple property ordering.
+    $this->results = $this->getQuery()
+      ->condition('type', 'fruit')
+      ->sort('text', 'DESC')
+      ->sort('id', 'DESC')
+      ->execute();
+    $this->assertResult('http://fruit.example.com/010', 'http://fruit.example.com/008', 'http://fruit.example.com/006', 'http://fruit.example.com/004', 'http://fruit.example.com/002', 'http://fruit.example.com/009', 'http://fruit.example.com/007', 'http://fruit.example.com/005', 'http://fruit.example.com/003', 'http://fruit.example.com/001');
+
+    $this->results = $this->getQuery()
+      ->condition('type', 'fruit')
+      ->sort('text')
+      ->sort('id', 'DESC')
+      ->execute();
+    $this->assertResult('http://fruit.example.com/009', 'http://fruit.example.com/007', 'http://fruit.example.com/005', 'http://fruit.example.com/003', 'http://fruit.example.com/001', 'http://fruit.example.com/010', 'http://fruit.example.com/008', 'http://fruit.example.com/006', 'http://fruit.example.com/004', 'http://fruit.example.com/002');
+
+    // Invalid directions are not allowed.
+    $this->expectException(\RuntimeException::class);
+    $this->expectExceptionMessage('Only "ASC" and "DESC" are allowed as sort order.');
+    $this->results = $this->getQuery()->sort('id', 'SOME_INVALID_DIRECTION');
+  }
+
+  /**
    * Tests operators '<', '>', '<=', '>=' for Ids.
    *
    * @dataProvider idStringComparisonDataProvider
