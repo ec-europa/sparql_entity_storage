@@ -356,27 +356,49 @@ class SparqlCondition extends ConditionFundamentals implements ConditionInterfac
         $condition['field']->compile($query);
       }
       else {
-        $mappings = $this->fieldHandler->getFieldPredicates($entity_type->id(), $condition['field'], $condition['column']);
-        $field_name = $condition['field'] . '__' . $condition['column'];
-        if (count($mappings) === 1) {
-          $this->fieldMappings[$field_name] = reset($mappings);
-        }
-        else {
-          if (!isset($this->fieldMappings[$field_name])) {
-            $this->fieldMappings[$field_name] = $field_name . '_predicate';
-          }
-          // The predicate mapping is not added as a direct filter. It is being
-          // loaded by the database. There is no way that in a single request,
-          // the same predicate is found with a single and multiple mappings.
-          // There is no filter per bundle in the query.
-          $this->fieldMappingConditions[] = [
-            'field' => $condition['field'],
-            'column' => $condition['column'],
-            'value' => array_unique(array_values($mappings)),
-            'operator' => 'IN',
-          ];
-        }
+        $this->addFieldMappingRequirement($entity_type->id(), $condition['field'], $condition['column']);
       }
+    }
+  }
+
+  /**
+   * Adds a mapping requirement to the condition list.
+   *
+   * The field mapping requirement can be used either to add a field with
+   * multiple mappings or external requirements like a mapping for sort or group
+   * arguments.
+   *
+   * @param string $entity_type_id
+   *   The entity type id.
+   * @param string $field
+   *   The field name.
+   * @param string $column
+   *   (optional) The field column. If empty, the main property will be used.
+   */
+  public function addFieldMappingRequirement(string $entity_type_id, string $field, string $column = NULL): void {
+    if (empty($column)) {
+      $column = $this->fieldHandler->getFieldMainProperty($entity_type_id, $field);
+    }
+
+    $mappings = $this->fieldHandler->getFieldPredicates($entity_type_id, $field, $column);
+    $field_name = $field . '__' . $column;
+    if (count($mappings) === 1) {
+      $this->fieldMappings[$field_name] = reset($mappings);
+    }
+    else {
+      if (!isset($this->fieldMappings[$field_name])) {
+        $this->fieldMappings[$field_name] = $field_name . '_predicate';
+      }
+      // The predicate mapping is not added as a direct filter. It is being
+      // loaded by the database. There is no way that in a single request,
+      // the same predicate is found with a single and multiple mappings.
+      // There is no filter per bundle in the query.
+      $this->fieldMappingConditions[] = [
+        'field' => $field,
+        'column' => $column,
+        'value' => array_unique(array_values($mappings)),
+        'operator' => 'IN',
+      ];
     }
   }
 
@@ -418,10 +440,12 @@ class SparqlCondition extends ConditionFundamentals implements ConditionInterfac
     foreach ($this->fieldMappingConditions as $condition) {
       $field_name = $condition['field'] . '__' . $condition['column'];
       $field_predicate = $this->fieldMappings[$field_name];
-      $this->addConditionFragment(self::ID_KEY . ' ' . $this->escapePredicate($field_predicate) . ' ' . SparqlArg::toVar($field_name));
+      $condition_string = self::ID_KEY . ' ' . $this->escapePredicate($field_predicate) . ' ' . SparqlArg::toVar($field_name);
+
       $condition['value'] = SparqlArg::toResourceUris($condition['value']);
       $condition['field'] = $field_predicate;
-      $this->addConditionFragment($this->compileValuesFilter($condition));
+      $condition_string .= ' . ' . $this->compileValuesFilter($condition);
+      $this->addConditionFragment($condition_string);
     }
   }
 

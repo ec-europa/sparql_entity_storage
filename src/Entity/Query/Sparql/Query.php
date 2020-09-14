@@ -208,18 +208,12 @@ class Query extends QueryBase implements SparqlQueryInterface {
       $this->query .= "FROM <$graph_uri>\n";
     }
 
-    // Before compiling the conditions, check if sorts have been added. Add one
-    // condition for each order field if none exist.
-    if (!empty($this->sort)) {
-      foreach ($this->sort as $data) {
-        // Skipping the bundle key as we have to provide a value for a
-        // condition. Skipping it will add a default triple in the WHERE clause
-        // if it is missing.
-        if (in_array($data['field'], [$this->idKey, $this->bundleKey])) {
-          continue;
-        }
-        $this->condition->exists($data['field']);
+    foreach ($this->sort as $data) {
+      if (in_array($data['field'], [$this->idKey, $this->bundleKey])) {
+        continue;
       }
+      // Add a requirement for each sorting criteria.
+      $this->addFieldMappingRequirement($this->entityTypeId, $data['field']);
     }
 
     return $this;
@@ -250,6 +244,7 @@ class Query extends QueryBase implements SparqlQueryInterface {
 
     $this->condition->compile($this);
     $this->query .= "WHERE {\n" . $this->condition->toString() . "\n}";
+
     return $this;
   }
 
@@ -273,6 +268,9 @@ class Query extends QueryBase implements SparqlQueryInterface {
       $field = $data['field'];
       if ($field === $this->idKey) {
         $field = SparqlCondition::ID_KEY;
+      }
+      elseif ($field === $this->bundleKey) {
+        $field = SparqlArg::toVar($field);
       }
       else {
         // Build the property to sort by just like it is build in condition().
@@ -381,6 +379,18 @@ class Query extends QueryBase implements SparqlQueryInterface {
   protected function conditionGroupFactory($conjunction = 'AND') {
     $class = static::getClass($this->namespaces, 'SparqlCondition');
     return new $class($conjunction, $this, $this->namespaces, $this->graphHandler, $this->fieldHandler);
+  }
+
+  /**
+   * Wrapper method to set a mapping requirement in the conditions group.
+   *
+   * @param string $entity_type_id
+   *   The entity type id.
+   * @param string $field
+   *   The field name.
+   */
+  protected function addFieldMappingRequirement(string $entity_type_id, string $field): void {
+    $this->condition->addFieldMappingRequirement($entity_type_id, $field);
   }
 
   /**

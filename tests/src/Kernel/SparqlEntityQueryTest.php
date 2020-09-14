@@ -361,10 +361,18 @@ class SparqlEntityQueryTest extends SparqlKernelTestBase {
     $this->assertResult('http://fruit.example.com/009', 'http://vegetable.example.com/003');
 
     $this->results = $this->getQuery()
-      ->condition('text', 'some text')
+      ->condition($sub_query)
       ->sort('type', 'DESC')
       ->execute();
-    $this->assertResult('http://fruit.example.com/009', 'http://vegetable.example.com/003');
+    $this->assertResult('http://vegetable.example.com/003', 'http://fruit.example.com/009');
+
+    // Test sorting using an OR query. Assert that mapping conditions are placed
+    // individually.
+    $this->results = $this->getQuery('OR')
+      ->condition($sub_query)
+      ->sort('type', 'DESC')
+      ->execute();
+    $this->assertResult('http://vegetable.example.com/003', 'http://fruit.example.com/009');
 
     // Invalid directions are not allowed.
     $this->expectException(\RuntimeException::class);
