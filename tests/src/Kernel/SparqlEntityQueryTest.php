@@ -370,7 +370,7 @@ class SparqlEntityQueryTest extends SparqlKernelTestBase {
     // individually.
     $this->results = $this->getQuery('OR')
       ->condition($sub_query)
-      ->sort('type', 'DESC')
+      ->sort('type', 'deSc')
       ->execute();
     $this->assertResult('http://vegetable.example.com/003', 'http://fruit.example.com/009');
 

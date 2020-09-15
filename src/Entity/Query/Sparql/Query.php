@@ -336,7 +336,7 @@ class Query extends QueryBase implements SparqlQueryInterface {
    * {@inheritdoc}
    */
   public function sort($field, $direction = 'ASC', $langcode = NULL) {
-    if (!in_array($direction, ['ASC', 'DESC'])) {
+    if (!in_array(strtoupper($direction), ['ASC', 'DESC'])) {
       throw new \RuntimeException('Only "ASC" and "DESC" are allowed as sort order.');
     }
     return parent::sort($field, $direction, $langcode);
