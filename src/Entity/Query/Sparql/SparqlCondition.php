@@ -372,10 +372,10 @@ class SparqlCondition extends ConditionFundamentals implements ConditionInterfac
    *   The entity type id.
    * @param string $field
    *   The field name.
-   * @param string $column
+   * @param string|null $column
    *   (optional) The field column. If empty, the main property will be used.
    */
-  public function addFieldMappingRequirement(string $entity_type_id, string $field, string $column = NULL): void {
+  public function addFieldMappingRequirement(string $entity_type_id, string $field, ?string $column = NULL): void {
     if (empty($column)) {
       $column = $this->fieldHandler->getFieldMainProperty($entity_type_id, $field);
     }
@@ -396,7 +396,7 @@ class SparqlCondition extends ConditionFundamentals implements ConditionInterfac
       $this->fieldMappingConditions[] = [
         'field' => $field,
         'column' => $column,
-        'value' => array_unique(array_values($mappings)),
+        'value' => array_values(array_unique($mappings)),
         'operator' => 'IN',
       ];
     }

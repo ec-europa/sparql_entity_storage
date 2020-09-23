@@ -93,7 +93,7 @@ class Query extends QueryBase implements SparqlQueryInterface {
   /**
    * The entity type bundle key.
    *
-   * @var string
+   * @var string|false
    */
   protected $bundleKey;
 
@@ -148,14 +148,6 @@ class Query extends QueryBase implements SparqlQueryInterface {
       $this->entityStorage = $this->entityTypeManager->getStorage($this->getEntityTypeId());
     }
     return $this->entityStorage;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function count($field = TRUE): SparqlQueryInterface {
-    $this->count = $field;
-    return $this;
   }
 
   /**
@@ -336,6 +328,7 @@ class Query extends QueryBase implements SparqlQueryInterface {
    * {@inheritdoc}
    */
   public function sort($field, $direction = 'ASC', $langcode = NULL) {
+    $direction = strtoupper($direction);
     if (!in_array($direction, ['ASC', 'DESC'])) {
       throw new \RuntimeException('Only "ASC" and "DESC" are allowed as sort order.');
     }
