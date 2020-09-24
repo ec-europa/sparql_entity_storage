@@ -31,7 +31,7 @@ class SparqlArg {
    *
    * @var string
    */
-  const VARIABLE_SEPARATOR = '·';
+  protected const VARIABLE_SEPARATOR = '·';
 
   /**
    * URI Query argument.
