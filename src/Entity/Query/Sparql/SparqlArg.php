@@ -23,9 +23,11 @@ class SparqlArg {
    * condition indicating that the property "column" should be checked for that
    * field. This is fine for standard SQL databases but for SPARQL, we cannot
    * simply concatenate the field an column with an underscore as that could
-   * conflict in fields like field_a_b.c and field_a.b_c.
+   * conflict in fields like field_a_b.c and field_a.b_c. Fortunately, SPARQL
+   * accepts some unicode characters, one of which is the middle dot, which are
+   * not accepted in Drupal field identifiers.
    *
-   * SPARQL accepts some unicode characters, one of which is the middle dot.
+   * @see https://www.w3.org/TR/sparql11-query/#rVARNAME
    *
    * @var string
    */
