@@ -84,6 +84,13 @@ class Query extends QueryBase implements SparqlQueryInterface {
   protected $fieldHandler;
 
   /**
+   * The entity type bundle key, if any.
+   *
+   * @var string|false
+   */
+  protected $bundleKey;
+
+  /**
    * Constructs a query object.
    *
    * @param \Drupal\Core\Entity\EntityTypeInterface $entity_type
@@ -110,6 +117,8 @@ class Query extends QueryBase implements SparqlQueryInterface {
     $this->entityTypeManager = $entity_type_manager;
     $this->connection = $connection;
     parent::__construct($entity_type, $conjunction, $namespaces);
+
+    $this->bundleKey = $entity_type->getKey('bundle');
 
     // Set a unique tag for the SPARQL queries.
     $this->addTag('sparql');
@@ -186,8 +195,8 @@ class Query extends QueryBase implements SparqlQueryInterface {
       // Allow all default graphs for this entity type.
       $this->graphIds = $this->graphHandler->getEntityTypeDefaultGraphIds($this->getEntityTypeId());
     }
-    $graph_uris = $this->graphHandler->getEntityTypeGraphUrisFlatList($this->getEntityTypeId(), $this->graphIds);
-    foreach ($graph_uris as $graph_uri) {
+
+    foreach ($this->getGraphUris() as $graph_uri) {
       $this->query .= "FROM <$graph_uri>\n";
     }
 
@@ -336,6 +345,58 @@ class Query extends QueryBase implements SparqlQueryInterface {
   protected function conditionGroupFactory($conjunction = 'AND') {
     $class = static::getClass($this->namespaces, 'SparqlCondition');
     return new $class($conjunction, $this, $this->namespaces, $this->graphHandler, $this->fieldHandler);
+  }
+
+  /**
+   * Returns a list of graph URIs that should be queried.
+   *
+   * @return string[]
+   *   List of graph URIs.
+   */
+  protected function getGraphUris(): array {
+    if ($bundle_conditions = $this->getBundleConditions()) {
+      // When the query has at least a bundle condition, we optimize the list of
+      // graphs to be searched.
+      $bundle_uris = ['IN' => [], 'NOT IN' => []];
+      $entity_type_graph_uris = $this->graphHandler->getEntityTypeGraphUris($this->getEntityTypeId());
+      foreach ($bundle_conditions as $type => $bundle_ids) {
+        foreach ($bundle_ids as $delta => $bundle_id) {
+          foreach (array_values(array_intersect_key($entity_type_graph_uris[$bundle_id], array_flip($this->graphIds))) as $uri) {
+            $bundle_uris[$type][] = $uri;
+          }
+        }
+      }
+      $bundle_uris['IN'] = $bundle_uris['IN'] ?: $this->graphHandler->getEntityTypeGraphUrisFlatList($this->getEntityTypeId(), $this->graphIds);
+      return array_diff($bundle_uris['IN'], $bundle_uris['NOT IN']);
+    }
+    return $this->graphHandler->getEntityTypeGraphUrisFlatList($this->getEntityTypeId(), $this->graphIds);
+  }
+
+  /**
+   * Returns the bundle conditions, if any.
+   *
+   * @return array
+   *   The bundle conditions with two keys, 'IN' and/or 'NOT IN'. If the entity
+   *   type supports no bundle or there are no bundle conditions, an empty array
+   *   is returned.
+   */
+  protected function getBundleConditions(): array {
+    $conditions = [];
+    if ($this->bundleKey) {
+      foreach ($this->conditions() as $condition) {
+        if ($condition['field'] === $this->bundleKey) {
+          foreach ($condition['value'] as $bundle_id) {
+            if (!isset($conditions[$condition['operator']])) {
+              $conditions[$condition['operator']] = [];
+            }
+            if (array_search($bundle_id, $conditions[$condition['operator']]) === FALSE) {
+              $conditions[$condition['operator']][] = $bundle_id;
+            }
+          }
+        }
+      }
+    }
+    return $conditions;
   }
 
   /**
