@@ -180,8 +180,8 @@ class SparqlCondition extends ConditionFundamentals implements SparqlConditionIn
    * @var array
    */
   protected static $conjunctionMap = [
-    'AND' => ['delimeter' => " .\n", 'prefix' => '', 'suffix' => ''],
-    'OR' => ['delimeter' => " UNION\n", 'prefix' => '{ ', 'suffix' => ' }'],
+    'AND' => ['delimiter' => " .\n", 'prefix' => '', 'suffix' => ''],
+    'OR' => ['delimiter' => " UNION\n", 'prefix' => '{ ', 'suffix' => ' }'],
   ];
 
   /**
@@ -441,7 +441,7 @@ class SparqlCondition extends ConditionFundamentals implements SparqlConditionIn
     // Put together everything.
     $condition_fragments = array_merge($this->tripleFragments, $this->conditionFragments);
 
-    return implode(self::$conjunctionMap[$this->conjunction]['delimeter'], array_unique($condition_fragments));
+    return implode(self::$conjunctionMap[$this->conjunction]['delimiter'], array_unique($condition_fragments));
   }
 
   /**
@@ -836,7 +836,7 @@ class SparqlCondition extends ConditionFundamentals implements SparqlConditionIn
    *   sparql_storage_entity:2.0.0. No replacement is provided.
    */
   public function isCompiled() {
-    @trigger_error(__NAMESPACE__ . '\isCompiled::toString() is deprecated in sparql_storage_entity:1.0.0 and is removed from sparql_storage_entity:2.0.0. No replacement is provided.', E_USER_DEPRECATED);
+    @trigger_error(__NAMESPACE__ . '\SparqlCondition::isCompiled() is deprecated in sparql_storage_entity:1.0.0 and is removed from sparql_storage_entity:2.0.0. No replacement is provided.', E_USER_DEPRECATED);
     return (bool) $this->isCompiled;
   }
 
