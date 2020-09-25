@@ -84,6 +84,20 @@ class Query extends QueryBase implements SparqlQueryInterface {
   protected $fieldHandler;
 
   /**
+   * The entity type id key.
+   *
+   * @var string
+   */
+  protected $idKey;
+
+  /**
+   * The entity type bundle key, if any.
+   *
+   * @var string|false
+   */
+  protected $bundleKey;
+
+  /**
    * Constructs a query object.
    *
    * @param \Drupal\Core\Entity\EntityTypeInterface $entity_type
@@ -111,6 +125,9 @@ class Query extends QueryBase implements SparqlQueryInterface {
     $this->connection = $connection;
     parent::__construct($entity_type, $conjunction, $namespaces);
 
+    $this->bundleKey = $entity_type->getKey('bundle');
+    $this->idKey = $entity_type->getKey('id');
+
     // Set a unique tag for the SPARQL queries.
     $this->addTag('sparql');
     $this->addMetaData('entity_type', $this->entityType);
@@ -131,14 +148,6 @@ class Query extends QueryBase implements SparqlQueryInterface {
       $this->entityStorage = $this->entityTypeManager->getStorage($this->getEntityTypeId());
     }
     return $this->entityStorage;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function count($field = TRUE) {
-    $this->count = $field;
-    return $this;
   }
 
   /**
@@ -167,7 +176,7 @@ class Query extends QueryBase implements SparqlQueryInterface {
    *
    * @return $this
    */
-  protected function prepare() {
+  protected function prepare(): SparqlQueryInterface {
     // Running as count query?
     if ($this->count) {
       if (is_string($this->count)) {
@@ -186,9 +195,17 @@ class Query extends QueryBase implements SparqlQueryInterface {
       // Allow all default graphs for this entity type.
       $this->graphIds = $this->graphHandler->getEntityTypeDefaultGraphIds($this->getEntityTypeId());
     }
-    $graph_uris = $this->graphHandler->getEntityTypeGraphUrisFlatList($this->getEntityTypeId(), $this->graphIds);
-    foreach ($graph_uris as $graph_uri) {
+
+    foreach ($this->getGraphUris() as $graph_uri) {
       $this->query .= "FROM <$graph_uri>\n";
+    }
+
+    foreach ($this->sort as $data) {
+      if (in_array($data['field'], [$this->idKey, $this->bundleKey])) {
+        continue;
+      }
+      // Add a requirement for each sorting criteria.
+      $this->addFieldMappingRequirement($this->entityTypeId, $data['field']);
     }
 
     return $this;
@@ -199,7 +216,7 @@ class Query extends QueryBase implements SparqlQueryInterface {
    *
    * @return $this
    */
-  protected function compile() {
+  protected function compile(): SparqlQueryInterface {
     // Modules may alter all queries or only those having a particular tag.
     if (isset($this->alterTags)) {
       // Remap the entity reference default tag to the SPARQL entity reference
@@ -219,6 +236,7 @@ class Query extends QueryBase implements SparqlQueryInterface {
 
     $this->condition->compile($this);
     $this->query .= "WHERE {\n" . $this->condition->toString() . "\n}";
+
     return $this;
   }
 
@@ -228,36 +246,43 @@ class Query extends QueryBase implements SparqlQueryInterface {
    * @return \Drupal\sparql_entity_storage\Entity\Query\Sparql\Query
    *   Returns the called object.
    */
-  protected function addSort() {
+  protected function addSort(): SparqlQueryInterface {
     if ($this->count) {
       $this->sort = [];
     }
-    // Simple sorting. For the POC, only uri's and bundles are supported.
-    // @todo Implement sorting on bundle fields?
-    if ($this->sort) {
-      // @todo Support multiple sort conditions.
-      $sort = array_pop($this->sort);
-      // @todo Can we use the field mapper here as well?
-      // Consider looping over the sort criteria in both the compile step and
-      // here: We can add ?entity <pred> ?sort_1 in the condition, and
-      // ORDER BY ASC ?sort_1 here (I think).
-      switch ($sort['field']) {
-        case 'id':
-          $this->query .= 'ORDER BY ' . $sort['direction'] . ' (?entity)';
-          break;
 
-        case 'rid':
-          $this->query .= 'ORDER BY ' . $sort['direction'] . ' (?bundle)';
-          break;
-      }
+    if (empty($this->sort)) {
+      return $this;
     }
+
+    $fragments = [];
+    foreach ($this->sort as $data) {
+      $field = $data['field'];
+      if ($field === $this->idKey) {
+        $field = SparqlCondition::ID_KEY;
+      }
+      elseif ($field === $this->bundleKey) {
+        $field = SparqlArg::toVar($field);
+      }
+      else {
+        // Build the property to sort by just like it is build in condition().
+        // @see: \Drupal\sparql_entity_storage\Entity\Query\Sparql\SparqlCondition::condition.
+        $field_name_parts = explode('.', $field);
+        $field = $field_name_parts[0];
+        $column = isset($field_name_parts[1]) ? $field_name_parts[1] : $this->fieldHandler->getFieldMainProperty($this->getEntityTypeId(), $field);
+        $field = SparqlArg::toVar("{$field}__{$column}");
+      }
+      $fragments[] = empty($data['direction']) ? $field : "{$data['direction']}({$field})";
+    }
+
+    $this->query .= "\nORDER BY " . implode(', ', $fragments);
     return $this;
   }
 
   /**
    * Add pager to query.
    */
-  protected function addPager() {
+  protected function addPager(): SparqlQueryInterface {
     $this->initializePager();
     if (!$this->count && $this->range) {
       $this->query .= 'LIMIT ' . $this->range['length'] . "\n";
@@ -269,7 +294,7 @@ class Query extends QueryBase implements SparqlQueryInterface {
   /**
    * Commit the query to the backend.
    */
-  protected function run() {
+  protected function run(): SparqlQueryInterface {
     /** @var \EasyRdf\Sparql\Result $results */
     $this->results = $this->connection->query($this->query);
     return $this;
@@ -300,12 +325,23 @@ class Query extends QueryBase implements SparqlQueryInterface {
   }
 
   /**
+   * {@inheritdoc}
+   */
+  public function sort($field, $direction = 'ASC', $langcode = NULL) {
+    $direction = strtoupper($direction);
+    if (!in_array($direction, ['ASC', 'DESC'])) {
+      throw new \RuntimeException('Only "ASC" and "DESC" are allowed as sort order.');
+    }
+    return parent::sort($field, $direction, $langcode);
+  }
+
+  /**
    * Returns the array of conditions.
    *
    * @return array
    *   The array of conditions.
    */
-  public function &conditions() {
+  public function &conditions(): array {
     return $this->condition->conditions();
   }
 
@@ -336,6 +372,70 @@ class Query extends QueryBase implements SparqlQueryInterface {
   protected function conditionGroupFactory($conjunction = 'AND') {
     $class = static::getClass($this->namespaces, 'SparqlCondition');
     return new $class($conjunction, $this, $this->namespaces, $this->graphHandler, $this->fieldHandler);
+  }
+
+  /**
+   * Wrapper method to set a mapping requirement in the conditions group.
+   *
+   * @param string $entity_type_id
+   *   The entity type id.
+   * @param string $field
+   *   The field name.
+   */
+  protected function addFieldMappingRequirement(string $entity_type_id, string $field): void {
+    $this->condition->addFieldMappingRequirement($entity_type_id, $field);
+  }
+
+  /**
+   * Returns a list of graph URIs that should be queried.
+   *
+   * @return string[]
+   *   List of graph URIs.
+   */
+  protected function getGraphUris(): array {
+    if ($bundle_conditions = $this->getBundleConditions()) {
+      // When the query has at least a bundle condition, we optimize the list of
+      // graphs to be searched.
+      $bundle_uris = ['IN' => [], 'NOT IN' => []];
+      $entity_type_graph_uris = $this->graphHandler->getEntityTypeGraphUris($this->getEntityTypeId());
+      foreach ($bundle_conditions as $type => $bundle_ids) {
+        foreach ($bundle_ids as $delta => $bundle_id) {
+          foreach (array_values(array_intersect_key($entity_type_graph_uris[$bundle_id], array_flip($this->graphIds))) as $uri) {
+            $bundle_uris[$type][] = $uri;
+          }
+        }
+      }
+      $bundle_uris['IN'] = $bundle_uris['IN'] ?: $this->graphHandler->getEntityTypeGraphUrisFlatList($this->getEntityTypeId(), $this->graphIds);
+      return array_diff($bundle_uris['IN'], $bundle_uris['NOT IN']);
+    }
+    return $this->graphHandler->getEntityTypeGraphUrisFlatList($this->getEntityTypeId(), $this->graphIds);
+  }
+
+  /**
+   * Returns the bundle conditions, if any.
+   *
+   * @return array
+   *   The bundle conditions with two keys, 'IN' and/or 'NOT IN'. If the entity
+   *   type supports no bundle or there are no bundle conditions, an empty array
+   *   is returned.
+   */
+  protected function getBundleConditions(): array {
+    $conditions = [];
+    if ($this->bundleKey) {
+      foreach ($this->conditions() as $condition) {
+        if ($condition['field'] === $this->bundleKey) {
+          foreach ($condition['value'] as $bundle_id) {
+            if (!isset($conditions[$condition['operator']])) {
+              $conditions[$condition['operator']] = [];
+            }
+            if (array_search($bundle_id, $conditions[$condition['operator']]) === FALSE) {
+              $conditions[$condition['operator']][] = $bundle_id;
+            }
+          }
+        }
+      }
+    }
+    return $conditions;
   }
 
   /**
