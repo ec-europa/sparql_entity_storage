@@ -235,7 +235,7 @@ class Query extends QueryBase implements SparqlQueryInterface {
     }
 
     $this->condition->compile($this);
-    $this->query .= "WHERE {\n" . $this->condition->toString() . "\n}";
+    $this->query .= "WHERE {\n{$this->condition}\n}";
 
     return $this;
   }
