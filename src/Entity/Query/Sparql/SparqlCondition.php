@@ -176,13 +176,6 @@ class SparqlCondition extends ConditionFundamentals implements SparqlConditionIn
   protected $labelKey;
 
   /**
-   * Whether the condition has been compiled.
-   *
-   * @var bool
-   */
-  private $isCompiled;
-
-  /**
    * A list of properties regarding the query conjunction.
    *
    * @var array
@@ -410,20 +403,6 @@ class SparqlCondition extends ConditionFundamentals implements SparqlConditionIn
         'operator' => 'IN',
       ];
     }
-  }
-
-  /**
-   * Returns the string version of the conditions.
-   *
-   * @return string
-   *   The string version of the conditions.
-   *
-   * @deprecated in sparql_storage_entity:1.0.0 and is removed from
-   *   sparql_storage_entity:2.0.0. Use self::__toString() instead.
-   */
-  public function toString() {
-    @trigger_error(__NAMESPACE__ . '\SparqlCondition::toString() is deprecated in sparql_storage_entity:1.0.0 and is removed from sparql_storage_entity:2.0.0. Use ' . __NAMESPACE__ . '\SparqlCondition::__toString() instead.', E_USER_DEPRECATED);
-    return $this->__toString();
   }
 
   /**
@@ -844,15 +823,6 @@ class SparqlCondition extends ConditionFundamentals implements SparqlConditionIn
       $value = $serializer->serialiseValue($outbound_value);
     }
     return $value;
-  }
-
-  /**
-   * @deprecated in sparql_storage_entity:1.0.0 and is removed from
-   *   sparql_storage_entity:2.0.0. No replacement is provided.
-   */
-  public function isCompiled() {
-    @trigger_error(__NAMESPACE__ . '\SparqlCondition::isCompiled() is deprecated in sparql_storage_entity:1.0.0 and is removed from sparql_storage_entity:2.0.0. No replacement is provided.', E_USER_DEPRECATED);
-    return (bool) $this->isCompiled;
   }
 
   /**
