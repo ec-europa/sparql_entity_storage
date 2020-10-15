@@ -10,7 +10,7 @@ services:
     arguments: [default, sparql_default]
   sparql.paramconverter:
     class: Drupal\sparql_entity_storage\ParamConverter\SparqlEntityStorageConverter
-    arguments: ['@entity.manager']
+    arguments: ['@entity_type.manager', '@entity.repository', '@event_dispatcher']
     tags:
     # Use a higher priority than EntityConverter.
     - { name: paramconverter, priority: 6 }
