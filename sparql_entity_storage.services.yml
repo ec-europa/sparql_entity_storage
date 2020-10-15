@@ -8,16 +8,6 @@ services:
     class: Drupal\sparql_entity_storage\Driver\Database\sparql\Connection
     factory: ['Drupal\Core\Database\Database', getConnection]
     arguments: [default, sparql_default]
-# @todo: Move the webprofiler integration into a submodule.
-#  webprofiler.sparql:
-#    class: \Drupal\sparql_entity_storage\DataCollector\SparqlDataCollector
-#    arguments: ['@sparql.endpoint', '@config.factory']
-#    tags:
-#      - name: data_collector
-#        template: "@rdf_entity/Collector/sparql.html.twig"
-#        id: sparql
-#        title: Sparql
-#        priority: 60
   sparql.paramconverter:
     class: Drupal\sparql_entity_storage\ParamConverter\SparqlEntityStorageConverter
     arguments: ['@entity.manager']
