@@ -399,7 +399,7 @@ class Query extends QueryBase implements SparqlQueryInterface {
       $bundle_uris = ['IN' => [], 'NOT IN' => []];
       $entity_type_graph_uris = $this->graphHandler->getEntityTypeGraphUris($this->getEntityTypeId());
       foreach ($bundle_conditions as $type => $bundle_ids) {
-        foreach ($bundle_ids as $delta => $bundle_id) {
+        foreach ($bundle_ids as $bundle_id) {
           foreach (array_values(array_intersect_key($entity_type_graph_uris[$bundle_id], array_flip($this->graphIds))) as $uri) {
             $bundle_uris[$type][] = $uri;
           }

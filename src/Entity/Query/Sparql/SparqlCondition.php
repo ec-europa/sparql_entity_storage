@@ -355,10 +355,13 @@ class SparqlCondition extends ConditionFundamentals implements SparqlConditionIn
     // The ID and bundle keys do not need to be compiled as they were already
     // handled in the keyCondition.
     $condition_stack = array_filter($condition_stack, function ($condition) {
-      return !in_array($condition['field'], [$this->idKey, $this->bundleKey], TRUE);
+      return !in_array($condition['field'], [
+        $this->idKey,
+        $this->bundleKey,
+      ], TRUE);
     });
 
-    foreach ($condition_stack as $index => $condition) {
+    foreach ($condition_stack as $condition) {
       if ($condition['field'] instanceof ConditionInterface) {
         $condition['field']->compile($query);
       }
@@ -788,7 +791,8 @@ class SparqlCondition extends ConditionFundamentals implements SparqlConditionIn
    * @return string|array
    *   The altered $value.
    *
-   * @throws \EasyRdf\Exception Thrown when the bundle does not have a mapping.
+   * @throws \EasyRdf\Exception
+   *   Thrown when the bundle does not have a mapping.
    */
   protected function escapeValue(string $field, $value, ?string $column = NULL, ?string $lang = NULL) {
     if (empty($value)) {

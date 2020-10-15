@@ -156,7 +156,6 @@ class SparqlEntityStorageFieldHandler implements SparqlEntityStorageFieldHandler
       // @see https://github.com/ec-europa/sparql_entity_storage/issues/3
       $bundle_type = $entity_type->getBundleEntityType();
 
-      $bundle_storage = $this->entityTypeManager->getStorage($bundle_type);
       $this->outboundMap[$entity_type_id] = $this->inboundMap[$entity_type_id] = [];
       $this->outboundMap[$entity_type_id]['bundle_key'] = $this->inboundMap[$entity_type_id]['bundle_key'] = $entity_type->getKey('bundle');
       $bundle_entities = $this->entityTypeManager->getStorage($bundle_type)->loadMultiple();
@@ -188,7 +187,7 @@ class SparqlEntityStorageFieldHandler implements SparqlEntityStorageFieldHandler
             continue;
           }
 
-          $this->outboundMap[$entity_type_id]['fields'][$field_name]['main_property'] = $field_storage_definition->getMainPropertyName();;
+          $this->outboundMap[$entity_type_id]['fields'][$field_name]['main_property'] = $field_storage_definition->getMainPropertyName();
           foreach ($field_mapping as $column_name => $column_mapping) {
             if (empty($column_mapping['predicate'])) {
               continue;

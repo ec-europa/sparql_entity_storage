@@ -263,7 +263,7 @@ class SparqlEntityStorage extends ContentEntityStorageBase implements SparqlEnti
           $langcode_key = $this->getEntityType()->getKey('langcode');
           $translations = [];
           if (!empty($entities_values[$id][$langcode_key])) {
-            foreach ($entities_values[$id][$langcode_key] as $langcode => $data) {
+            foreach ($entities_values[$id][$langcode_key] as $data) {
               if (!empty(reset($data)['value'])) {
                 $translations[] = reset($data)['value'];
               }
@@ -397,7 +397,6 @@ QUERY;
           $return[$entity_id][$this->idKey][LanguageInterface::LANGCODE_DEFAULT] = $entity_id;
           $return[$entity_id]['graph'][LanguageInterface::LANGCODE_DEFAULT] = $graph_id;
 
-          $rdf_type = NULL;
           foreach ($entity_values as $predicate => $field) {
             $field_name = isset($inbound_map['fields'][$predicate][$bundle]['field_name']) ? $inbound_map['fields'][$predicate][$bundle]['field_name'] : NULL;
             if (empty($field_name)) {
@@ -643,8 +642,6 @@ QUERY;
    * {@inheritdoc}
    */
   public function loadRevision($revision_id) {
-    list($entity_id, $graph) = explode('||', $revision_id);
-
     return NULL;
   }
 
@@ -721,7 +718,7 @@ QUERY;
       // Determine all possible graphs for the entity.
       $graphs_by_bundle = $this->getGraphHandler()->getEntityTypeGraphUris($this->getEntityTypeId());
       $graphs = $graphs_by_bundle[$keyed_entity->bundle()];
-      foreach ($graphs as $graph_name => $graph_uri) {
+      foreach ($graphs as $graph_uri) {
         $entities_by_graph[$graph_uri][$keyed_entity->id()] = $keyed_entity;
       }
     }
@@ -857,7 +854,7 @@ QUERY;
     $lang_array = $this->toLangArray($entity);
     foreach ($lang_array as $field_name => $langcode_data) {
       foreach ($langcode_data as $langcode => $field_item) {
-        foreach ($field_item as $delta => $column_data) {
+        foreach ($field_item as $column_data) {
           foreach ($column_data as $column => $value) {
             // Filter out empty values or non mapped fields. The id is also
             // excluded as it is not mapped.

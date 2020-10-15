@@ -18,8 +18,8 @@ use Drupal\Core\Form\FormStateInterface;
 use Drupal\field\Entity\FieldStorageConfig;
 use Drupal\field\FieldStorageConfigInterface;
 use Drupal\sparql_entity_storage\Entity\SparqlMapping;
-use Drupal\sparql_entity_storage\SparqlEntityStorageInterface;
 use Drupal\sparql_entity_storage\SparqlEntityStorageFieldHandler;
+use Drupal\sparql_entity_storage\SparqlEntityStorageInterface;
 use Drupal\sparql_entity_storage\SparqlGraphInterface;
 use EasyRdf\Http;
 
@@ -40,7 +40,7 @@ function sparql_entity_storage_entity_base_field_info_alter(array &$fields, Enti
 }
 
 /**
- * Implements hook_form_alter().
+ * Implements hook_form_FORM_ID_alter().
  */
 function sparql_entity_storage_form_field_storage_config_edit_form_alter(&$form, FormStateInterface $form_state, $form_id) {
   // Only add mapping form element to fields of entities implementing
@@ -241,7 +241,7 @@ function sparql_entity_storage_form_alter(&$form, FormStateInterface $form_state
 
   /** @var \Drupal\sparql_entity_storage\SparqlEntityStorageEntityIdPluginManager $id_plugin_manager */
   $id_plugin_manager = \Drupal::service('plugin.manager.sparql_entity_id');
-  $plugins = array_map(function (array $definition) use ($id_plugin_manager) {
+  $plugins = array_map(function (array $definition) {
     return $definition['name'];
   }, $id_plugin_manager->getDefinitions());
 
@@ -262,7 +262,10 @@ function sparql_entity_storage_form_alter(&$form, FormStateInterface $form_state
   foreach ($storage->getGraphDefinitions() as $graph_id => $graph) {
     $form['sparql_entity_storage']['graph'][$graph_id] = [
       '#type' => 'url',
-      '#title' => t('@title (@id)', ['@title' => $graph['title'], '@id' => $graph_id]),
+      '#title' => t('@title (@id)', [
+        '@title' => $graph['title'],
+        '@id' => $graph_id,
+      ]),
       '#description' => $graph['description'],
       '#default_value' => $mapping ? $mapping->getGraphUri($graph_id) : NULL,
       '#required' => $graph_id === SparqlGraphInterface::DEFAULT,
