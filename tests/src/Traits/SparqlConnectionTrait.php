@@ -3,7 +3,6 @@
 namespace Drupal\Tests\sparql_entity_storage\Traits;
 
 use Drupal\Core\Database\Database;
-use EasyRdf\Http;
 use DrupalFinder\DrupalFinder;
 
 /**
@@ -31,17 +30,6 @@ trait SparqlConnectionTrait {
    * @throws \Exception
    *   When Virtuoso version is 6.
    */
-  protected function detectVirtuoso6() {
-    $client = Http::getDefaultHttpClient();
-    $client->resetParameters(TRUE);
-    $client->setUri("http://{$this->sparqlConnectionInfo['host']}:{$this->sparqlConnectionInfo['port']}/");
-    $client->setMethod('GET');
-    $response = $client->request();
-    $server_header = $response->getHeader('Server');
-    if (strpos($server_header, "Virtuoso/06") !== FALSE) {
-      throw new \Exception('Not running on Virtuoso 6.');
-    }
-  }
 
   /**
    * Configures the DB connection to the triple store.
@@ -55,8 +43,6 @@ trait SparqlConnectionTrait {
       throw new \LogicException('No Sparql connection was defined. Set the SIMPLETEST_SPARQL_DB environment variable.');
     }
 
-    // Do not allow Virtuoso 6.
-    $this->detectVirtuoso6();
     if (!defined('DRUPAL_ROOT')) {
       $drupalFinder = new DrupalFinder();
       $drupalFinder->locateRoot(__DIR__);
