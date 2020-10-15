@@ -7,6 +7,7 @@ namespace Drupal\sparql_entity_storage\Entity\Query\Sparql;
 use Drupal\Core\Entity\Query\ConditionFundamentals;
 use Drupal\Core\Entity\Query\ConditionInterface;
 use Drupal\Core\Language\LanguageInterface;
+use Drupal\Core\Language\LanguageManagerInterface;
 use Drupal\sparql_entity_storage\SparqlEntityStorageFieldHandlerInterface;
 use Drupal\sparql_entity_storage\SparqlEntityStorageGraphHandlerInterface;
 use EasyRdf\Serialiser\Ntriples;
@@ -29,6 +30,13 @@ class SparqlCondition extends ConditionFundamentals implements SparqlConditionIn
    * @var \Drupal\sparql_entity_storage\SparqlEntityStorageFieldHandlerInterface
    */
   protected $fieldHandler;
+
+  /**
+   * The language manager service.
+   *
+   * @var \Drupal\Core\Language\LanguageManagerInterface
+   */
+  protected $languageManager;
 
   /**
    * A list of allowed operators for the ID and bundle key.
@@ -197,12 +205,15 @@ class SparqlCondition extends ConditionFundamentals implements SparqlConditionIn
    *   The SPARQL graph handler service.
    * @param \Drupal\sparql_entity_storage\SparqlEntityStorageFieldHandlerInterface $sparql_field_handler
    *   The SPARQL field mapping handler service.
+   * @param \Drupal\Core\Language\LanguageManagerInterface $language_manager
+   *   The language manager service.
    */
-  public function __construct($conjunction, SparqlQueryInterface $query, array $namespaces, SparqlEntityStorageGraphHandlerInterface $sparql_graph_handler, SparqlEntityStorageFieldHandlerInterface $sparql_field_handler) {
+  public function __construct($conjunction, SparqlQueryInterface $query, array $namespaces, SparqlEntityStorageGraphHandlerInterface $sparql_graph_handler, SparqlEntityStorageFieldHandlerInterface $sparql_field_handler, LanguageManagerInterface $language_manager) {
     $conjunction = strtoupper($conjunction);
     parent::__construct($conjunction, $query, $namespaces);
     $this->graphHandler = $sparql_graph_handler;
     $this->fieldHandler = $sparql_field_handler;
+    $this->languageManager = $language_manager;
     $this->typePredicate = $query->getEntityStorage()->getBundlePredicates();
     $this->bundleKey = $query->getEntityType()->getKey('bundle');
     $this->idKey = $query->getEntityType()->getKey('id');
@@ -737,7 +748,7 @@ class SparqlCondition extends ConditionFundamentals implements SparqlConditionIn
     ];
 
     if (empty($default_lang) || in_array($default_lang, $non_languages)) {
-      return \Drupal::languageManager()->getCurrentLanguage()->getId();
+      return $this->languageManager->getCurrentLanguage()->getId();
     }
 
     return $default_lang;

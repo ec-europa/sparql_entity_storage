@@ -1,7 +1,7 @@
 services:
   entity.query.sparql:
     class: Drupal\sparql_entity_storage\Entity\Query\Sparql\QueryFactory
-    arguments: ['@sparql.endpoint', '@entity_type.manager', '@sparql.graph_handler', '@sparql.field_handler']
+    arguments: ['@sparql.endpoint', '@entity_type.manager', '@sparql.graph_handler', '@sparql.field_handler', '@module_handler', '@language_manager']
     tags:
     - { name: backend_overridable }
   sparql.endpoint:
