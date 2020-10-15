@@ -11,7 +11,7 @@ use Drupal\Core\Database\Database;
  *
  * @group sparql_entity_storage
  *
- * @coversDefaultClass \Drupal\Driver\Database\sparql\Connection
+ * @coversDefaultClass \Drupal\sparql_entity_storage\Driver\Database\sparql\Connection
  */
 class DatabaseLogTest extends SparqlKernelTestBase {
 

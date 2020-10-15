@@ -17,7 +17,7 @@
   },
   "autoload": {
     "classmap": [
-      "driver/sparql/Connection.php"
+      "src/Driver/Database/sparql/Connection.php"
     ]
   }
 }

@@ -6,7 +6,7 @@ use Drupal\Core\Entity\EntityTypeInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Entity\Query\QueryBase;
 use Drupal\Core\Entity\Query\QueryFactoryInterface;
-use Drupal\sparql_entity_storage\Database\Driver\sparql\ConnectionInterface;
+use Drupal\sparql_entity_storage\Driver\Database\sparql\ConnectionInterface;
 use Drupal\sparql_entity_storage\SparqlEntityStorageFieldHandlerInterface;
 use Drupal\sparql_entity_storage\SparqlEntityStorageGraphHandlerInterface;
 
@@ -18,7 +18,7 @@ class QueryFactory implements QueryFactoryInterface {
   /**
    * The connection object.
    *
-   * @var \Drupal\sparql_entity_storage\Database\Driver\sparql\ConnectionInterface
+   * @var \Drupal\sparql_entity_storage\Driver\Database\sparql\ConnectionInterface
    */
   protected $connection;
 
@@ -53,7 +53,7 @@ class QueryFactory implements QueryFactoryInterface {
   /**
    * Constructs a QueryFactory object.
    *
-   * @param \Drupal\sparql_entity_storage\Database\Driver\sparql\ConnectionInterface $connection
+   * @param \Drupal\sparql_entity_storage\Driver\Database\sparql\ConnectionInterface $connection
    *   The connection object.
    * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entity_type_manager
    *   The entity type manager.

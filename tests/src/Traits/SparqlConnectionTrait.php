@@ -4,6 +4,7 @@ namespace Drupal\Tests\sparql_entity_storage\Traits;
 
 use Drupal\Core\Database\Database;
 use EasyRdf\Http;
+use DrupalFinder\DrupalFinder;
 
 /**
  * Provides helpers to add a SPARQL database connection in tests.
@@ -13,7 +14,7 @@ trait SparqlConnectionTrait {
   /**
    * The SPARQL database connection.
    *
-   * @var \Drupal\sparql_entity_storage\Database\Driver\sparql\ConnectionInterface
+   * @var \Drupal\sparql_entity_storage\Driver\Database\sparql\ConnectionInterface
    */
   protected $sparql;
 
@@ -43,25 +44,28 @@ trait SparqlConnectionTrait {
   }
 
   /**
-   * Setup the db connection to the triple store.
+   * Configures the DB connection to the triple store.
    *
    * @throws \LogicException
    *   When SIMPLETEST_SPARQL_DB is not set.
    */
   protected function setUpSparql() {
-    // If the test is run with argument db url then use it.
-    // export SIMPLETEST_SPARQL_DB='sparql://127.0.0.1:8890/'.
     $db_url = getenv('SIMPLETEST_SPARQL_DB');
     if (empty($db_url)) {
       throw new \LogicException('No Sparql connection was defined. Set the SIMPLETEST_SPARQL_DB environment variable.');
     }
 
-    $this->sparqlConnectionInfo = Database::convertDbUrlToConnectionInfo($db_url, dirname(dirname(__FILE__)));
-    $this->sparqlConnectionInfo['namespace'] = 'Drupal\\Driver\\Database\\sparql';
-
     // Do not allow Virtuoso 6.
     $this->detectVirtuoso6();
+    if (!defined('DRUPAL_ROOT')) {
+      $drupalFinder = new DrupalFinder();
+      $drupalFinder->locateRoot(__DIR__);
+      $root = $drupalFinder->getDrupalRoot();
+      require_once "$root/core/includes/bootstrap.inc";
+    }
 
+    $this->sparqlConnectionInfo = Database::convertDbUrlToConnectionInfo($db_url, DRUPAL_ROOT);
+    $this->sparqlConnectionInfo['namespace'] = 'Drupal\\sparql_entity_storage\\Driver\\Database\\sparql';
     Database::addConnectionInfo('sparql_default', 'default', $this->sparqlConnectionInfo);
 
     $this->sparql = Database::getConnection('default', 'sparql_default');

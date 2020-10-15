@@ -2,11 +2,9 @@
 
 declare(strict_types = 1);
 
-namespace Drupal\Driver\Database\sparql;
+namespace Drupal\sparql_entity_storage\Driver\Database\sparql;
 
 use Drupal\Core\Database\Log;
-use Drupal\sparql_entity_storage\Database\Driver\sparql\ConnectionInterface;
-use Drupal\sparql_entity_storage\Database\Driver\sparql\StatementStub;
 use Drupal\sparql_entity_storage\Exception\SparqlQueryException;
 use EasyRdf\Graph;
 use EasyRdf\Http\Exception as EasyRdfException;
@@ -123,7 +121,7 @@ class Connection implements ConnectionInterface {
    * @throws \InvalidArgumentException
    *   If $args value is passed but arguments replacement is not yet
    *   supported. To be removed in #55.
-   * @throws SparqlQueryException
+   * @throws \Drupal\sparql_entity_storage\Exception\SparqlQueryException
    *   Exception during query execution, e.g. timeout.
    *
    * @see https://github.com/ec-europa/sparql_entity_storage/issues/1
@@ -300,14 +298,14 @@ class Connection implements ConnectionInterface {
    * requirement. We use a statement stub that only stores the connection and
    * the query to be used when logging the event.
    *
-   * @return \Drupal\sparql_entity_storage\Database\Driver\sparql\StatementStub
+   * @return \Drupal\sparql_entity_storage\Driver\Database\sparql\StatementStub
    *   A faked statement object.
    *
    * @see \Drupal\Core\Database\Database::startLog()
    * @see \Drupal\Core\Database\Log
    * @see \Drupal\Core\Database\StatementInterface
-   * @see \Drupal\sparql_entity_storage\Database\Driver\sparql\StatementStub
-   * @see \Drupal\Driver\Database\sparql\Connection::log()
+   * @see \Drupal\sparql_entity_storage\Driver\Database\sparql\StatementStub
+   * @see \Drupal\sparql_entity_storage\Driver\Database\sparql\Connection::log()
    */
   protected function getStatement(): StatementStub {
     if (!isset($this->statementStub)) {

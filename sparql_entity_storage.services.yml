@@ -5,7 +5,7 @@ services:
     tags:
     - { name: backend_overridable }
   sparql.endpoint:
-    class: Drupal\Driver\Database\sparql\Connection
+    class: Drupal\sparql_entity_storage\Driver\Database\sparql\Connection
     factory: ['Drupal\Core\Database\Database', getConnection]
     arguments: [default, sparql_default]
 # @todo: Move the webprofiler integration into a submodule.
