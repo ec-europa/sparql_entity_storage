@@ -1335,4 +1335,11 @@ QUERY;
     $entity->sparqlEntityOriginalGraph = $entity->get('graph')->target_id;
   }
 
+  /**
+   * {@inheritdoc}
+   */
+  protected function doLoadMultipleRevisionsFieldItems($revision_ids) {
+    return [];
+  }
+
 }
