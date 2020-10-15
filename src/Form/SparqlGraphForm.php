@@ -96,7 +96,7 @@ class SparqlGraphForm extends EntityForm {
    */
   public function save(array $form, FormStateInterface $form_state): int {
     $form_state->setRedirect('entity.sparql_graph.collection');
-    drupal_set_message($this->t("Graph %name (%id) has been saved.", [
+    $this->messenger()->addStatus($this->t("Graph %name (%id) has been saved.", [
       '%name' => $this->getEntity()->label(),
       '%id' => $this->getEntity()->id(),
     ]));

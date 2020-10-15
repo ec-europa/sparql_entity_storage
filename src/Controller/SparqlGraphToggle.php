@@ -65,7 +65,7 @@ class SparqlGraphToggle extends ControllerBase {
       $sparql_graph->disable()->save();
       $message = $this->t("The %name (%id) graph has been disabled.", $arguments);
     }
-    drupal_set_message($message);
+    $this->messenger()->addStatus($message);
 
     return $this->redirect('entity.sparql_graph.collection');
   }
