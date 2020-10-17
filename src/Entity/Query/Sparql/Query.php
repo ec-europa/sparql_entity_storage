@@ -8,7 +8,9 @@ use Drupal\Core\Entity\EntityTypeInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Entity\Query\QueryBase;
 use Drupal\Core\Entity\Query\Sql\ConditionAggregate;
-use Drupal\sparql_entity_storage\Database\Driver\sparql\ConnectionInterface;
+use Drupal\Core\Extension\ModuleHandlerInterface;
+use Drupal\Core\Language\LanguageManagerInterface;
+use Drupal\sparql_entity_storage\Driver\Database\sparql\ConnectionInterface;
 use Drupal\sparql_entity_storage\SparqlEntityStorageInterface;
 use Drupal\sparql_entity_storage\SparqlEntityStorageFieldHandlerInterface;
 use Drupal\sparql_entity_storage\SparqlEntityStorageGraphHandlerInterface;
@@ -21,7 +23,7 @@ class Query extends QueryBase implements SparqlQueryInterface {
   /**
    * The connection object.
    *
-   * @var \Drupal\sparql_entity_storage\Database\Driver\sparql\ConnectionInterface
+   * @var \Drupal\sparql_entity_storage\Driver\Database\sparql\ConnectionInterface
    */
   protected $connection;
 
@@ -84,6 +86,20 @@ class Query extends QueryBase implements SparqlQueryInterface {
   protected $fieldHandler;
 
   /**
+   * The module handler service.
+   *
+   * @var \Drupal\Core\Extension\ModuleHandlerInterface
+   */
+  protected $moduleHandler;
+
+  /**
+   * The language manager service.
+   *
+   * @var \Drupal\Core\Language\LanguageManagerInterface
+   */
+  protected $languageManager;
+
+  /**
    * The entity type id key.
    *
    * @var string
@@ -105,7 +121,7 @@ class Query extends QueryBase implements SparqlQueryInterface {
    * @param string $conjunction
    *   - AND: all of the conditions on the query need to match.
    *   - OR: at least one of the conditions on the query need to match.
-   * @param \Drupal\sparql_entity_storage\Database\Driver\sparql\ConnectionInterface $connection
+   * @param \Drupal\sparql_entity_storage\Driver\Database\sparql\ConnectionInterface $connection
    *   The database connection to run the query against.
    * @param array $namespaces
    *   List of potential namespaces of the classes belonging to this query.
@@ -115,14 +131,21 @@ class Query extends QueryBase implements SparqlQueryInterface {
    *   The SPARQL graph handler service.
    * @param \Drupal\sparql_entity_storage\SparqlEntityStorageFieldHandlerInterface $sparql_field_handler
    *   The SPARQL field mapping handler service.
+   * @param \Drupal\Core\Extension\ModuleHandlerInterface $module_handler
+   *   The module handler service.
+   * @param \Drupal\Core\Language\LanguageManagerInterface $language_manager
+   *   The language manager service.
    */
-  public function __construct(EntityTypeInterface $entity_type, $conjunction, ConnectionInterface $connection, array $namespaces, EntityTypeManagerInterface $entity_type_manager, SparqlEntityStorageGraphHandlerInterface $sparql_graph_handler, SparqlEntityStorageFieldHandlerInterface $sparql_field_handler) {
+  public function __construct(EntityTypeInterface $entity_type, $conjunction, ConnectionInterface $connection, array $namespaces, EntityTypeManagerInterface $entity_type_manager, SparqlEntityStorageGraphHandlerInterface $sparql_graph_handler, SparqlEntityStorageFieldHandlerInterface $sparql_field_handler, ModuleHandlerInterface $module_handler, LanguageManagerInterface $language_manager) {
     // Assign the handlers before calling the parent so that they can be passed
     // to the condition class properly.
     $this->graphHandler = $sparql_graph_handler;
     $this->fieldHandler = $sparql_field_handler;
     $this->entityTypeManager = $entity_type_manager;
     $this->connection = $connection;
+    $this->moduleHandler = $module_handler;
+    $this->languageManager = $language_manager;
+
     parent::__construct($entity_type, $conjunction, $namespaces);
 
     $this->bundleKey = $entity_type->getKey('bundle');
@@ -231,7 +254,7 @@ class Query extends QueryBase implements SparqlQueryInterface {
       foreach ($this->alterTags as $tag => $value) {
         $hooks[] = 'query_' . $tag;
       }
-      \Drupal::moduleHandler()->alter($hooks, $this);
+      $this->moduleHandler->alter($hooks, $this);
     }
 
     $this->condition->compile($this);
@@ -371,7 +394,7 @@ class Query extends QueryBase implements SparqlQueryInterface {
    */
   protected function conditionGroupFactory($conjunction = 'AND') {
     $class = static::getClass($this->namespaces, 'SparqlCondition');
-    return new $class($conjunction, $this, $this->namespaces, $this->graphHandler, $this->fieldHandler);
+    return new $class($conjunction, $this, $this->namespaces, $this->graphHandler, $this->fieldHandler, $this->languageManager);
   }
 
   /**
@@ -399,7 +422,7 @@ class Query extends QueryBase implements SparqlQueryInterface {
       $bundle_uris = ['IN' => [], 'NOT IN' => []];
       $entity_type_graph_uris = $this->graphHandler->getEntityTypeGraphUris($this->getEntityTypeId());
       foreach ($bundle_conditions as $type => $bundle_ids) {
-        foreach ($bundle_ids as $delta => $bundle_id) {
+        foreach ($bundle_ids as $bundle_id) {
           foreach (array_values(array_intersect_key($entity_type_graph_uris[$bundle_id], array_flip($this->graphIds))) as $uri) {
             $bundle_uris[$type][] = $uri;
           }

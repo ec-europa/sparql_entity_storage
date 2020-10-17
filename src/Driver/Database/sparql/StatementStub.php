@@ -1,6 +1,6 @@
 <?php
 
-namespace Drupal\sparql_entity_storage\Database\Driver\sparql;
+namespace Drupal\sparql_entity_storage\Driver\Database\sparql;
 
 use Drupal\Core\Database\StatementInterface;
 
@@ -23,7 +23,7 @@ use Drupal\Core\Database\StatementInterface;
  * @see \Drupal\Core\Database\Database::startLog()
  * @see \Drupal\Core\Database\Log
  * @see \Drupal\Core\Database\StatementInterface
- * @see \Drupal\Driver\Database\sparql\Connection::log()
+ * @see \Drupal\sparql_entity_storage\Driver\Database\sparql\Connection::log()
  * @see https://github.com/sebastianbergmann/phpunit-mock-objects/issues/103
  */
 class StatementStub implements \Iterator, StatementInterface {
@@ -40,7 +40,7 @@ class StatementStub implements \Iterator, StatementInterface {
    *
    * The name $dbh is inherited from \PDOStatement.
    *
-   * @var \Drupal\sparql_entity_storage\Database\Driver\sparql\ConnectionInterface
+   * @var \Drupal\sparql_entity_storage\Driver\Database\\sparql\ConnectionInterface
    */
   public $dbh;
 
@@ -67,7 +67,7 @@ class StatementStub implements \Iterator, StatementInterface {
   /**
    * Sets the database connection.
    *
-   * @param \Drupal\sparql_entity_storage\Database\Driver\sparql\ConnectionInterface $connection
+   * @param \Drupal\sparql_entity_storage\Driver\Database\\sparql\ConnectionInterface $connection
    *   The SPARQL connection.
    *
    * @return $this

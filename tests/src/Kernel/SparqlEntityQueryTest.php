@@ -470,7 +470,7 @@ class SparqlEntityQueryTest extends SparqlKernelTestBase {
    *   An array of entity values.
    */
   protected function getTestEntityValues() {
-    $time = \Drupal::time()->getRequestTime();
+    $time = $this->container->get('datetime.time')->getRequestTime();
     $return = [];
     // Entity 001.
     $return[] = [

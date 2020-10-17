@@ -7,6 +7,7 @@ namespace Drupal\sparql_entity_storage\Entity\Query\Sparql;
 use Drupal\Core\Entity\Query\ConditionFundamentals;
 use Drupal\Core\Entity\Query\ConditionInterface;
 use Drupal\Core\Language\LanguageInterface;
+use Drupal\Core\Language\LanguageManagerInterface;
 use Drupal\sparql_entity_storage\SparqlEntityStorageFieldHandlerInterface;
 use Drupal\sparql_entity_storage\SparqlEntityStorageGraphHandlerInterface;
 use EasyRdf\Serialiser\Ntriples;
@@ -29,6 +30,13 @@ class SparqlCondition extends ConditionFundamentals implements SparqlConditionIn
    * @var \Drupal\sparql_entity_storage\SparqlEntityStorageFieldHandlerInterface
    */
   protected $fieldHandler;
+
+  /**
+   * The language manager service.
+   *
+   * @var \Drupal\Core\Language\LanguageManagerInterface
+   */
+  protected $languageManager;
 
   /**
    * A list of allowed operators for the ID and bundle key.
@@ -168,13 +176,6 @@ class SparqlCondition extends ConditionFundamentals implements SparqlConditionIn
   protected $labelKey;
 
   /**
-   * Whether the condition has been compiled.
-   *
-   * @var bool
-   */
-  private $isCompiled;
-
-  /**
    * A list of properties regarding the query conjunction.
    *
    * @var array
@@ -197,12 +198,15 @@ class SparqlCondition extends ConditionFundamentals implements SparqlConditionIn
    *   The SPARQL graph handler service.
    * @param \Drupal\sparql_entity_storage\SparqlEntityStorageFieldHandlerInterface $sparql_field_handler
    *   The SPARQL field mapping handler service.
+   * @param \Drupal\Core\Language\LanguageManagerInterface $language_manager
+   *   The language manager service.
    */
-  public function __construct($conjunction, SparqlQueryInterface $query, array $namespaces, SparqlEntityStorageGraphHandlerInterface $sparql_graph_handler, SparqlEntityStorageFieldHandlerInterface $sparql_field_handler) {
+  public function __construct($conjunction, SparqlQueryInterface $query, array $namespaces, SparqlEntityStorageGraphHandlerInterface $sparql_graph_handler, SparqlEntityStorageFieldHandlerInterface $sparql_field_handler, LanguageManagerInterface $language_manager) {
     $conjunction = strtoupper($conjunction);
     parent::__construct($conjunction, $query, $namespaces);
     $this->graphHandler = $sparql_graph_handler;
     $this->fieldHandler = $sparql_field_handler;
+    $this->languageManager = $language_manager;
     $this->typePredicate = $query->getEntityStorage()->getBundlePredicates();
     $this->bundleKey = $query->getEntityType()->getKey('bundle');
     $this->idKey = $query->getEntityType()->getKey('id');
@@ -355,10 +359,13 @@ class SparqlCondition extends ConditionFundamentals implements SparqlConditionIn
     // The ID and bundle keys do not need to be compiled as they were already
     // handled in the keyCondition.
     $condition_stack = array_filter($condition_stack, function ($condition) {
-      return !in_array($condition['field'], [$this->idKey, $this->bundleKey], TRUE);
+      return !in_array($condition['field'], [
+        $this->idKey,
+        $this->bundleKey,
+      ], TRUE);
     });
 
-    foreach ($condition_stack as $index => $condition) {
+    foreach ($condition_stack as $condition) {
       if ($condition['field'] instanceof ConditionInterface) {
         $condition['field']->compile($query);
       }
@@ -396,20 +403,6 @@ class SparqlCondition extends ConditionFundamentals implements SparqlConditionIn
         'operator' => 'IN',
       ];
     }
-  }
-
-  /**
-   * Returns the string version of the conditions.
-   *
-   * @return string
-   *   The string version of the conditions.
-   *
-   * @deprecated in sparql_storage_entity:1.0.0 and is removed from
-   *   sparql_storage_entity:2.0.0. Use self::__toString() instead.
-   */
-  public function toString() {
-    @trigger_error(__NAMESPACE__ . '\SparqlCondition::toString() is deprecated in sparql_storage_entity:1.0.0 and is removed from sparql_storage_entity:2.0.0. Use ' . __NAMESPACE__ . '\SparqlCondition::__toString() instead.', E_USER_DEPRECATED);
-    return $this->__toString();
   }
 
   /**
@@ -734,7 +727,7 @@ class SparqlCondition extends ConditionFundamentals implements SparqlConditionIn
     ];
 
     if (empty($default_lang) || in_array($default_lang, $non_languages)) {
-      return \Drupal::languageManager()->getCurrentLanguage()->getId();
+      return $this->languageManager->getCurrentLanguage()->getId();
     }
 
     return $default_lang;
@@ -788,7 +781,8 @@ class SparqlCondition extends ConditionFundamentals implements SparqlConditionIn
    * @return string|array
    *   The altered $value.
    *
-   * @throws \EasyRdf\Exception Thrown when the bundle does not have a mapping.
+   * @throws \EasyRdf\Exception
+   *   Thrown when the bundle does not have a mapping.
    */
   protected function escapeValue(string $field, $value, ?string $column = NULL, ?string $lang = NULL) {
     if (empty($value)) {
@@ -829,15 +823,6 @@ class SparqlCondition extends ConditionFundamentals implements SparqlConditionIn
       $value = $serializer->serialiseValue($outbound_value);
     }
     return $value;
-  }
-
-  /**
-   * @deprecated in sparql_storage_entity:1.0.0 and is removed from
-   *   sparql_storage_entity:2.0.0. No replacement is provided.
-   */
-  public function isCompiled() {
-    @trigger_error(__NAMESPACE__ . '\SparqlCondition::isCompiled() is deprecated in sparql_storage_entity:1.0.0 and is removed from sparql_storage_entity:2.0.0. No replacement is provided.', E_USER_DEPRECATED);
-    return (bool) $this->isCompiled;
   }
 
   /**
