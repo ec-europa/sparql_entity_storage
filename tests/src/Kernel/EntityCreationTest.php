@@ -33,7 +33,7 @@ class EntityCreationTest extends SparqlKernelTestBase {
     // Check that on saving an existing entity no exception is thrown.
     SparqlTest::load('http://example.com/apple')->save();
 
-    // Check that new rdf_entity, with its own ID, don't raise any exception.
+    // Check that new test entity, with its own ID, don't raise any exception.
     SparqlTest::create([
       'type' => 'fruit',
       'id' => 'http://example.com/berry',
@@ -42,7 +42,8 @@ class EntityCreationTest extends SparqlKernelTestBase {
 
     // Check that the expected exception is throw when trying to create a new
     // entity with the same ID.
-    $this->setExpectedException(DuplicatedIdException::class, "Attempting to create a new entity with the ID 'http://example.com/apple' already taken.");
+    $this->expectException(DuplicatedIdException::class);
+    $this->expectExceptionMessage("Attempting to create a new entity with the ID 'http://example.com/apple' already taken.");
     SparqlTest::create([
       'type' => 'fruit',
       'id' => 'http://example.com/apple',
@@ -66,7 +67,6 @@ class EntityCreationTest extends SparqlKernelTestBase {
     $this->assertEquals(SparqlGraph::DEFAULT, $entity->get('graph')->target_id);
 
     // Check that it is possible to specify a custom graph.
-    /** @var \Drupal\rdf_entity\RdfInterface $entity */
     $entity = SparqlTest::create([
       'type' => 'waffle',
       'id' => 'http://example.com/liege-waffle',

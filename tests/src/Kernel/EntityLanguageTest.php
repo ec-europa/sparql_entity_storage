@@ -73,7 +73,8 @@ class EntityLanguageTest extends SparqlKernelTestBase {
     $this->assertEquals('Τυχαιο κειμενο', $entity->text->value);
 
     // Verify that the translation is deleted.
-    $this->setExpectedException('\InvalidArgumentException', "Invalid translation language (el) specified.");
+    $this->expectException(\InvalidArgumentException::class);
+    $this->expectExceptionMessage('Invalid translation language (el) specified.');
     $entity->getTranslation('el');
   }
 

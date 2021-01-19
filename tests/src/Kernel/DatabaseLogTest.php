@@ -11,7 +11,7 @@ use Drupal\Core\Database\Database;
  *
  * @group sparql_entity_storage
  *
- * @coversDefaultClass \Drupal\Driver\Database\sparql\Connection
+ * @coversDefaultClass \Drupal\sparql_entity_storage\Driver\Database\sparql\Connection
  */
 class DatabaseLogTest extends SparqlKernelTestBase {
 
@@ -24,15 +24,15 @@ class DatabaseLogTest extends SparqlKernelTestBase {
    *   The query.
    * @param array $args
    *   The query arguments.
-   * @param \Throwable|null $expected_exception
-   *   The expected exception, if any.
+   * @param string|null $expected_exception_message
+   *   The expected exception message, if any.
    *
    * @dataProvider provider
    */
-  public function testLog(string $method, string $query, array $args, ?\Throwable $expected_exception): void {
-    if ($expected_exception) {
-      $this->expectException(get_class($expected_exception));
-      $this->expectExceptionMessage($expected_exception->getMessage());
+  public function testLog(string $method, string $query, array $args, ?string $expected_exception_message): void {
+    if ($expected_exception_message) {
+      $this->expectException(\InvalidArgumentException::class);
+      $this->expectExceptionMessage($expected_exception_message);
     }
 
     Database::startLog('log_test', 'sparql_default');
@@ -78,7 +78,7 @@ class DatabaseLogTest extends SparqlKernelTestBase {
         'query',
         'SELECT DISTINCT ?s ?p ?o WHERE { <:subject> ?p ?o } LIMIT 100',
         [':subject' => 'http://example.com'],
-        new \InvalidArgumentException('Replacement arguments are not yet supported.'),
+        'Replacement arguments are not yet supported.',
       ],
     ];
   }

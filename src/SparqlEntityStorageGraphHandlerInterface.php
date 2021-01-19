@@ -138,7 +138,7 @@ interface SparqlEntityStorageGraphHandlerInterface {
    *   (optional) A list of graph IDs to limit the results. NULL means that all
    *   graphs are allowed. Defaults to NULL.
    *
-   * @return string[]
+   * @return string[][]
    *   A list of graph URIs.
    */
   public function getEntityTypeGraphUris(string $entity_type_id, array $limit_to_graph_ids = NULL): array;

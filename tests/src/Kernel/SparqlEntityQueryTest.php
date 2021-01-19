@@ -34,7 +34,7 @@ class SparqlEntityQueryTest extends SparqlKernelTestBase {
   /**
    * Dummy reference entities.
    *
-   * @var \Drupal\rdf_entity\RdfInterface[]
+   * @var \Drupal\sparql_test\Entity\SparqlTest[]
    */
   protected $entities;
 
@@ -162,28 +162,32 @@ class SparqlEntityQueryTest extends SparqlKernelTestBase {
     $this->assertResult('http://vegetable.example.com/001');
 
     // Try to fetch a NULL ID.
-    $this->setExpectedException('Exception', 'The value cannot be NULL for conditions related to the Id and bundle keys.');
+    $this->expectException(\Exception::class);
+    $this->expectExceptionMessage('The value cannot be NULL for conditions related to the Id and bundle keys.');
     $this->results = $this->getQuery()
       ->condition('id', NULL)
       ->condition('type', 'vegetable')
       ->execute();
 
     // Try to filter ID with an invalid operator.
-    $this->setExpectedException('Exception', "Only '=', '!=', '<>', 'IN', 'NOT IN' operators are allowed for the Id and bundle keys.");
+    $this->expectException(\Exception::class);
+    $this->expectExceptionMessage("Only '=', '!=', '<>', 'IN', 'NOT IN' operators are allowed for the Id and bundle keys.");
     $this->results = $this->getQuery()
       ->condition('id', 'http://vegetable.example.com/003', 'LIKE')
       ->condition('type', 'vegetable')
       ->execute();
 
     // Try to fetch a NULL bundle.
-    $this->setExpectedException('Exception', 'The value cannot be NULL for conditions related to the Id and bundle keys.');
+    $this->expectException(\Exception::class);
+    $this->expectExceptionMessage('The value cannot be NULL for conditions related to the Id and bundle keys.');
     $this->results = $this->getQuery()
       ->condition('id', 'http://vegetable.example.com/002')
       ->condition('type', NULL)
       ->execute();
 
     // Try to filter bundle with an invalid operator.
-    $this->setExpectedException('Exception', "Only '=', '!=', '<>', 'IN', 'NOT IN' operators are allowed for the Id and bundle keys.");
+    $this->expectException(\Exception::class);
+    $this->expectExceptionMessage("Only '=', '!=', '<>', 'IN', 'NOT IN' operators are allowed for the Id and bundle keys.");
     $this->results = $this->getQuery()
       ->condition('id', 'http://vegetable.example.com/003')
       ->condition('type', 'multi', 'STARTS WITH')
@@ -305,6 +309,78 @@ class SparqlEntityQueryTest extends SparqlKernelTestBase {
   }
 
   /**
+   * Tests sorting and order mechanisms.
+   */
+  public function testSortOrder() {
+    // Sort without direction. Defaults to ASC.
+    $this->results = $this->getQuery()
+      ->condition('type', 'fruit')
+      ->sort('text')
+      ->execute();
+    $this->assertResult('http://fruit.example.com/001', 'http://fruit.example.com/003', 'http://fruit.example.com/005', 'http://fruit.example.com/007', 'http://fruit.example.com/009', 'http://fruit.example.com/002', 'http://fruit.example.com/004', 'http://fruit.example.com/006', 'http://fruit.example.com/008', 'http://fruit.example.com/010');
+
+    // Sort by ascending direction.
+    $this->results = $this->getQuery()
+      ->condition('type', 'fruit')
+      ->sort('text', 'ASC')
+      ->execute();
+    $this->assertResult('http://fruit.example.com/001', 'http://fruit.example.com/003', 'http://fruit.example.com/005', 'http://fruit.example.com/007', 'http://fruit.example.com/009', 'http://fruit.example.com/002', 'http://fruit.example.com/004', 'http://fruit.example.com/006', 'http://fruit.example.com/008', 'http://fruit.example.com/010');
+
+    // Sort by descending direction.
+    $this->results = $this->getQuery()
+      ->condition('type', 'fruit')
+      ->sort('text', 'DESC')
+      ->execute();
+    $this->assertResult('http://fruit.example.com/002', 'http://fruit.example.com/004', 'http://fruit.example.com/006', 'http://fruit.example.com/008', 'http://fruit.example.com/010', 'http://fruit.example.com/001', 'http://fruit.example.com/003', 'http://fruit.example.com/005', 'http://fruit.example.com/007', 'http://fruit.example.com/009');
+
+    // Test multiple property ordering.
+    $this->results = $this->getQuery()
+      ->condition('type', 'fruit')
+      ->sort('text', 'DESC')
+      ->sort('id', 'DESC')
+      ->execute();
+    $this->assertResult('http://fruit.example.com/010', 'http://fruit.example.com/008', 'http://fruit.example.com/006', 'http://fruit.example.com/004', 'http://fruit.example.com/002', 'http://fruit.example.com/009', 'http://fruit.example.com/007', 'http://fruit.example.com/005', 'http://fruit.example.com/003', 'http://fruit.example.com/001');
+
+    $this->results = $this->getQuery()
+      ->condition('type', 'fruit')
+      ->sort('text')
+      ->sort('id', 'DESC')
+      ->execute();
+    $this->assertResult('http://fruit.example.com/009', 'http://fruit.example.com/007', 'http://fruit.example.com/005', 'http://fruit.example.com/003', 'http://fruit.example.com/001', 'http://fruit.example.com/010', 'http://fruit.example.com/008', 'http://fruit.example.com/006', 'http://fruit.example.com/004', 'http://fruit.example.com/002');
+
+    // Test the bundle key as it is a separate special case along with the id.
+    $sub_query = $this->getQuery()->orConditionGroup();
+    $sub_query
+      ->condition('id', 'http://fruit.example.com/009')
+      ->condition('id', 'http://vegetable.example.com/003');
+
+    $this->results = $this->getQuery()
+      ->condition($sub_query)
+      ->sort('type')
+      ->execute();
+    $this->assertResult('http://fruit.example.com/009', 'http://vegetable.example.com/003');
+
+    $this->results = $this->getQuery()
+      ->condition($sub_query)
+      ->sort('type', 'DESC')
+      ->execute();
+    $this->assertResult('http://vegetable.example.com/003', 'http://fruit.example.com/009');
+
+    // Test sorting using an OR query. Assert that mapping conditions are placed
+    // individually.
+    $this->results = $this->getQuery('OR')
+      ->condition($sub_query)
+      ->sort('type', 'DESC')
+      ->execute();
+    $this->assertResult('http://vegetable.example.com/003', 'http://fruit.example.com/009');
+
+    // Invalid directions are not allowed.
+    $this->expectException(\RuntimeException::class);
+    $this->expectExceptionMessage('Only "ASC" and "DESC" are allowed as sort order.');
+    $this->results = $this->getQuery()->sort('id', 'SOME_INVALID_DIRECTION');
+  }
+
+  /**
    * Tests operators '<', '>', '<=', '>=' for Ids.
    *
    * @dataProvider idStringComparisonDataProvider
@@ -394,7 +470,7 @@ class SparqlEntityQueryTest extends SparqlKernelTestBase {
    *   An array of entity values.
    */
   protected function getTestEntityValues() {
-    $time = \Drupal::time()->getRequestTime();
+    $time = $this->container->get('datetime.time')->getRequestTime();
     $return = [];
     // Entity 001.
     $return[] = [

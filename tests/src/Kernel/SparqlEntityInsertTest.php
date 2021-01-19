@@ -72,7 +72,7 @@ class SparqlEntityInsertTest extends SparqlKernelTestBase {
       'title' => $this->randomMachineName(),
       'type' => 'vegetable',
       'reference' => $reference_array,
-      'date' => \Drupal::time()->getRequestTime(),
+      'date' => $this->container->get('datetime.time')->getRequestTime(),
     ];
 
     $entity = SparqlTest::create($values);

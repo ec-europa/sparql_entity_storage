@@ -19,7 +19,7 @@ use Drupal\Core\Extension\ModuleHandlerInterface;
 use Drupal\Core\Field\FieldDefinitionInterface;
 use Drupal\Core\Language\LanguageInterface;
 use Drupal\Core\Language\LanguageManagerInterface;
-use Drupal\sparql_entity_storage\Database\Driver\sparql\ConnectionInterface;
+use Drupal\sparql_entity_storage\Driver\Database\sparql\ConnectionInterface;
 use Drupal\sparql_entity_storage\Entity\Query\Sparql\SparqlArg;
 use Drupal\sparql_entity_storage\Entity\SparqlGraph;
 use Drupal\sparql_entity_storage\Exception\DuplicatedIdException;
@@ -49,7 +49,7 @@ class SparqlEntityStorage extends ContentEntityStorageBase implements SparqlEnti
   /**
    * Sparql database connection.
    *
-   * @var \Drupal\sparql_entity_storage\Database\Driver\sparql\ConnectionInterface
+   * @var \Drupal\sparql_entity_storage\Driver\Database\sparql\ConnectionInterface
    */
   protected $sparql;
 
@@ -108,7 +108,7 @@ class SparqlEntityStorage extends ContentEntityStorageBase implements SparqlEnti
    *   The memory cache backend.
    * @param \Drupal\Core\Entity\EntityTypeBundleInfoInterface $entity_type_bundle_info
    *   The entity type bundle info.
-   * @param \Drupal\sparql_entity_storage\Database\Driver\sparql\ConnectionInterface $sparql
+   * @param \Drupal\sparql_entity_storage\Driver\Database\sparql\ConnectionInterface $sparql
    *   The connection object.
    * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entity_type_manager
    *   The entity type manager service.
@@ -137,12 +137,6 @@ class SparqlEntityStorage extends ContentEntityStorageBase implements SparqlEnti
     SparqlEntityStorageFieldHandlerInterface $sparql_field_handler,
     SparqlEntityStorageEntityIdPluginManager $entity_id_plugin_manager
   ) {
-    // Support Drupal 8.6.x.
-    // @todo Remove this hack in #92.
-    // @see https://github.com/ec-europa/rdf_entity/issues/92
-    if (version_compare(\Drupal::VERSION, '8.7.0', '<')) {
-      $entity_field_manager = \Drupal::entityManager();
-    }
     parent::__construct($entity_type, $entity_field_manager, $cache, $memory_cache, $entity_type_bundle_info);
     $this->sparql = $sparql;
     $this->entityTypeManager = $entity_type_manager;
@@ -156,7 +150,7 @@ class SparqlEntityStorage extends ContentEntityStorageBase implements SparqlEnti
   /**
    * {@inheritdoc}
    */
-  public static function createInstance(ContainerInterface $container, EntityTypeInterface $entity_type) {
+  public static function createInstance(ContainerInterface $container, EntityTypeInterface $entity_type): self {
     return new static(
       $entity_type,
       $container->get('entity_field.manager'),
@@ -190,7 +184,7 @@ class SparqlEntityStorage extends ContentEntityStorageBase implements SparqlEnti
   /**
    * {@inheritdoc}
    */
-  public function create(array $values = []) {
+  public function create(array $values = []): ContentEntityInterface {
     /** @var \Drupal\Core\Entity\ContentEntityInterface $entity */
     $entity = parent::create($values);
     // Ensure the default graph if no explicit graph has been set.
@@ -269,7 +263,7 @@ class SparqlEntityStorage extends ContentEntityStorageBase implements SparqlEnti
           $langcode_key = $this->getEntityType()->getKey('langcode');
           $translations = [];
           if (!empty($entities_values[$id][$langcode_key])) {
-            foreach ($entities_values[$id][$langcode_key] as $langcode => $data) {
+            foreach ($entities_values[$id][$langcode_key] as $data) {
               if (!empty(reset($data)['value'])) {
                 $translations[] = reset($data)['value'];
               }
@@ -324,11 +318,11 @@ class SparqlEntityStorage extends ContentEntityStorageBase implements SparqlEnti
     // @see https://github.com/ec-europa/sparql_entity_storage/issues/2
     $query = <<<QUERY
 SELECT ?graph ?entity_id ?predicate ?field_value
-$named_graph
+{$named_graph}
 WHERE{
   GRAPH ?graph {
     ?entity_id ?predicate ?field_value .
-    VALUES ?entity_id { $ids_string } .
+    VALUES ?entity_id { {$ids_string} } .
   }
 }
 QUERY;
@@ -403,13 +397,13 @@ QUERY;
           $return[$entity_id][$this->idKey][LanguageInterface::LANGCODE_DEFAULT] = $entity_id;
           $return[$entity_id]['graph'][LanguageInterface::LANGCODE_DEFAULT] = $graph_id;
 
-          $rdf_type = NULL;
           foreach ($entity_values as $predicate => $field) {
             $field_name = isset($inbound_map['fields'][$predicate][$bundle]['field_name']) ? $inbound_map['fields'][$predicate][$bundle]['field_name'] : NULL;
             if (empty($field_name)) {
               continue;
             }
 
+            /** @var string  $field_name */
             $column = $inbound_map['fields'][$predicate][$bundle]['column'];
             foreach ($field as $lang => $items) {
               $langcode_key = ($lang === $default_language) ? LanguageInterface::LANGCODE_DEFAULT : $lang;
@@ -648,8 +642,6 @@ QUERY;
    * {@inheritdoc}
    */
   public function loadRevision($revision_id) {
-    list($entity_id, $graph) = explode('||', $revision_id);
-
     return NULL;
   }
 
@@ -726,7 +718,7 @@ QUERY;
       // Determine all possible graphs for the entity.
       $graphs_by_bundle = $this->getGraphHandler()->getEntityTypeGraphUris($this->getEntityTypeId());
       $graphs = $graphs_by_bundle[$keyed_entity->bundle()];
-      foreach ($graphs as $graph_name => $graph_uri) {
+      foreach ($graphs as $graph_uri) {
         $entities_by_graph[$graph_uri][$keyed_entity->id()] = $keyed_entity;
       }
     }
@@ -751,7 +743,7 @@ QUERY;
     /** @var string $id */
     /** @var \Drupal\Core\Entity\ContentEntityInterface $entity */
     foreach ($entities as $id => $entity) {
-      $graph_uri = $this->getGraphHandler()->getBundleGraphUri($entity->getEntityTypeId(), $entity->bundle(), $entity->graph->target_id);
+      $graph_uri = $this->getGraphHandler()->getBundleGraphUri($entity->getEntityTypeId(), $entity->bundle(), (string) $entity->get('graph')->target_id);
       $entities_by_graph[$graph_uri][$id] = $entity;
     }
     foreach ($entities_by_graph as $graph_uri => $entities_to_delete) {
@@ -767,8 +759,6 @@ QUERY;
    * @param string $graph_uri
    *   The graph URI to delete from.
    *
-   * @throws \Drupal\sparql_entity_storage\Exception\SparqlQueryException
-   *   If the SPARQL query fails.
    * @throws \Exception
    *   The query fails with no specific reason.
    */
@@ -776,7 +766,7 @@ QUERY;
     $entity_list = SparqlArg::serializeUris(array_keys($entities));
 
     $query = <<<QUERY
-DELETE FROM <$graph_uri>
+DELETE FROM <{$graph_uri}>
 {
   ?entity ?field ?value
 }
@@ -784,7 +774,7 @@ WHERE
 {
   ?entity ?field ?value
   FILTER(
-    ?entity IN ($entity_list)
+    ?entity IN ( {$entity_list} )
   )
 }
 QUERY;
@@ -864,7 +854,7 @@ QUERY;
     $lang_array = $this->toLangArray($entity);
     foreach ($lang_array as $field_name => $langcode_data) {
       foreach ($langcode_data as $langcode => $field_item) {
-        foreach ($field_item as $delta => $column_data) {
+        foreach ($field_item as $column_data) {
           foreach ($column_data as $column => $value) {
             // Filter out empty values or non mapped fields. The id is also
             // excluded as it is not mapped.
@@ -1148,7 +1138,7 @@ QUERY;
   protected function setStaticCache(array $entities) {
     if ($this->entityType->isStaticallyCacheable()) {
       foreach ($entities as $id => $entity) {
-        $this->entities[$id][$entity->graph->target_id] = $entity;
+        $this->entities[$id][$entity->get('graph')->target_id] = $entity;
       }
     }
   }
@@ -1261,14 +1251,14 @@ QUERY;
     $graph_uri = SparqlArg::uri($graph_uri);
     $query = <<<QUERY
 DELETE {
-  GRAPH $graph_uri {
-    $id ?field ?value
+  GRAPH {$graph_uri} {
+    {$id} ?field ?value
   }
 }
 WHERE {
-  GRAPH $graph_uri {
-    $id ?field ?value .
-    FILTER (?field IN ($serialized))
+  GRAPH {$graph_uri} {
+    {$id} ?field ?value .
+    FILTER (?field IN ( {$serialized} ))
   }
 }
 QUERY;
@@ -1343,6 +1333,13 @@ QUERY;
     // @see \Drupal\sparql_entity_storage\SparqlEntityStorage::doPreSave()
     // @see \Drupal\Core\Entity\EntityForm
     $entity->sparqlEntityOriginalGraph = $entity->get('graph')->target_id;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  protected function doLoadMultipleRevisionsFieldItems($revision_ids) {
+    return [];
   }
 
 }

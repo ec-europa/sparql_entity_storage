@@ -17,6 +17,23 @@ use EasyRdf\Serialiser\Ntriples;
 class SparqlArg {
 
   /**
+   * The variable separator.
+   *
+   * Normally, a parameter like "field_name.column" can be passed in the
+   * condition indicating that the property "column" should be checked for that
+   * field. This is fine for standard SQL databases but for SPARQL, we cannot
+   * simply concatenate the field an column with an underscore as that could
+   * conflict in fields like field_a_b.c and field_a.b_c. Fortunately, SPARQL
+   * accepts some unicode characters, one of which is the middle dot, which are
+   * not accepted in Drupal field identifiers.
+   *
+   * @see https://www.w3.org/TR/sparql11-query/#rVARNAME
+   *
+   * @var string
+   */
+  protected const VARIABLE_SEPARATOR = '·';
+
+  /**
    * URI Query argument.
    *
    * @param array $uris
@@ -136,6 +153,28 @@ class SparqlArg {
     }
     $serializer = new Ntriples();
     return $serializer->serialiseValue($data);
+  }
+
+  /**
+   * Prefixes a keyword with a prefix in order to be treated as a variable.
+   *
+   * @param string $key
+   *   The name of the variable.
+   * @param bool $blank
+   *   Whether or not to be a blank note.
+   *
+   * @return string
+   *   The variable.
+   */
+  public static function toVar($key, $blank = FALSE) {
+    // Deal with field.property as dots are not allowed in var names.
+    $key = str_replace('.', self::VARIABLE_SEPARATOR, $key);
+    if (strpos($key, '?') === FALSE && strpos($key, '_:') === FALSE) {
+      return ($blank ? '_:' : '?') . $key;
+    }
+
+    // Do not alter the string if it is already prefixed as a variable.
+    return $key;
   }
 
 }
