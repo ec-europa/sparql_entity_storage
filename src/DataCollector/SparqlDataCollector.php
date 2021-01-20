@@ -68,7 +68,7 @@ class SparqlDataCollector extends DataCollector implements DrupalDataCollectorIn
     $query_sort = $this->configFactory->get('webprofiler.config')->get('query_sort');
     if ('duration' === $query_sort) {
       usort($queries, [
-        "\\Drupal\\sparql_entity_storage\\DataCollector\\SparqlDataCollector",
+        SparqlDataCollector::class,
         "orderQueryByTime",
       ]);
     }
@@ -254,7 +254,7 @@ class SparqlDataCollector extends DataCollector implements DrupalDataCollectorIn
    * @return int
    *   Sort for usort.
    */
-  private function orderQueryByTime(array $a, array $b) {
+  protected function orderQueryByTime(array $a, array $b) {
     $at = $a['time'];
     $bt = $b['time'];
 
