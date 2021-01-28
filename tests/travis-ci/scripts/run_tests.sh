@@ -46,6 +46,9 @@ case "${TEST}" in
         chmod 0775 ${SITE_DIR}/web/sites/default/settings.php
         cat ${TRAVIS_BUILD_DIR}/tests/travis-ci/fixtures/connection.txt >> ${SITE_DIR}/web/sites/default/settings.php
 
+        # Test the SPARQL endpoint.
+        curl "localhost:8890/sparql?default-graph-uri=&query=select+distinct+%3FConcept+where+%7B%5B%5D+a+%3FConcept%7D+LIMIT+100&should-sponge=&format=text%2Fhtml"
+
         # Enable the 'rdf_entity' module.
         ./vendor/bin/drush pm:enable sparql_entity_storage --yes --root=${SITE_DIR}/web
 
