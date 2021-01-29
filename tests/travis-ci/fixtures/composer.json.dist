@@ -53,11 +53,6 @@
       "locations": {
         "web-root": "web/"
       }
-    },
-    "patches": {
-      "drupal/core": {
-        "Bundle label plural variants @see https://www.drupal.org/node/2765065": "https://www.drupal.org/files/issues/2018-06-11/2765065-93.patch"
-      }
     }
   }
 }
