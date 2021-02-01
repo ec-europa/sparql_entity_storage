@@ -302,7 +302,7 @@ class SparqlEntityStorage extends ContentEntityStorageBase implements SparqlEnti
       return [];
     }
 
-    // @todo: We should filter per entity per graph and not load the whole
+    // @todo We should filter per entity per graph and not load the whole
     // database only to filter later on.
     // @see https://github.com/ec-europa/sparql_entity_storage/issues/2
     $ids_string = SparqlArg::serializeUris($ids, ' ');
@@ -1084,7 +1084,7 @@ QUERY;
    * @param array $values
    *   The field values.
    *
-   * @todo: To be removed when columns will be supported. No need to manually
+   * @todo To be removed when columns will be supported. No need to manually
    * set this.
    */
   protected function applyFieldDefaults($type, array &$values): void {

@@ -222,7 +222,7 @@ class SparqlCondition extends ConditionFundamentals implements SparqlConditionIn
   /**
    * {@inheritdoc}
    *
-   * @todo: handle the lang.
+   * @todo handle the lang.
    */
   public function condition($field = NULL, $value = NULL, $operator = NULL, $lang = NULL): self {
     if ($this->conjunction == 'OR') {
@@ -296,7 +296,7 @@ class SparqlCondition extends ConditionFundamentals implements SparqlConditionIn
    *   Thrown if the value is NULL or the operator is not allowed.
    */
   protected function keyCondition(string $field, $value, string $operator): self {
-    // @todo: Add support for loadMultiple with empty Id (load all).
+    // @todo Add support for loadMultiple with empty Id (load all).
     if ($value == NULL) {
       throw new \Exception('The value cannot be NULL for conditions related to the Id and bundle keys.');
     }
@@ -569,7 +569,7 @@ class SparqlCondition extends ConditionFundamentals implements SparqlConditionIn
    * @param array $condition
    *   The query condition.
    *
-   * @todo: This could work generically but currently the term storage has
+   * @todo This could work generically but currently the term storage has
    * two possible predicates. This can be removed when we will be left with one
    * predicate for the term storage.
    */
