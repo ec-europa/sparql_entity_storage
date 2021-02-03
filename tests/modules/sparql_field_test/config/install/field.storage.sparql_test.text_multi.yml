@@ -6,9 +6,11 @@ dependencies:
 third_party_settings:
   sparql_entity_storage:
     mapping:
-      value:
-        predicate: 'http://example.com/text_multi'
-        format: 'literal'
+      field: null
+      columns:
+        value:
+          predicate: 'http://example.com/text_multi'
+          format: 'literal'
 id: sparql_test.text_multi
 field_name: text_multi
 entity_type: sparql_test

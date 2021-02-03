@@ -6,9 +6,11 @@ dependencies:
 third_party_settings:
   sparql_entity_storage:
     mapping:
-      target_id:
-        predicate: 'http://purl.org/dc/terms/relation'
-        format: resource
+      field: null
+      columns:
+        target_id:
+          predicate: 'http://purl.org/dc/terms/relation'
+          format: resource
 id: sparql_test.reference
 field_name: reference
 entity_type: sparql_test

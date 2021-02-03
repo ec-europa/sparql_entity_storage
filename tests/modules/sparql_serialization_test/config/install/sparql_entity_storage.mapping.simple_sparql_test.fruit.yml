@@ -11,13 +11,17 @@ bundle: fruit
 rdf_type: 'http://example.com/fruit/type'
 base_fields_mapping:
   type:
-    target_id:
-      predicate: 'http://www.w3.org/1999/02/22-rdf-syntax-ns#type'
-      format: resource
+    field: null
+    columns:
+      target_id:
+        predicate: 'http://www.w3.org/1999/02/22-rdf-syntax-ns#type'
+        format: resource
   title:
-    value:
-      predicate: 'http://example.com/fruit/title'
-      format: t_literal
+    field: null
+    columns:
+      value:
+        predicate: 'http://example.com/fruit/title'
+        format: t_literal
 graph:
   default: 'http://example.com/fruit/graph/default'
 entity_id_plugin: default
