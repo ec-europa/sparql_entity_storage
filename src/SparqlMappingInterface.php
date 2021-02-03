@@ -219,10 +219,40 @@ interface SparqlMappingInterface extends ConfigEntityInterface {
    *
    * @return array|null
    *   Associative array with two keys: 'predicate' and 'format'.
+   *
+   * @deprecated in sparql_entity_storage:8.x-1.0-alpha9 and is removed in
+   *   sparql_entity_storage:8.x-1.0-beta1. Use
+   *   SparqlMapping::getFieldColumnMapping() instead.
    */
   public function getMapping(string $field_name, string $column_name = 'value'): ?array;
 
   /**
+   * Returns the mapping for a specific base field.
+   *
+   * Only multi-value fields should provide a mapping at field level.
+   *
+   * @param string $field_name
+   *   The field name.
+   *
+   * @return array|null
+   *   Associative array with two keys: 'predicate' and 'format'.
+   */
+  public function getFieldMapping(string $field_name): ?array;
+
+  /**
+   * Returns the mapping for a specific column of a base field.
+   *
+   * @param string $field_name
+   *   The field name.
+   * @param string $column_name
+   *   (optional) The column name. Defaults to 'value'.
+   *
+   * @return array|null
+   *   Associative array with two keys: 'predicate' and 'format'.
+   */
+  public function getFieldColumnMapping(string $field_name, string $column_name = 'value'): ?array;
+
+    /**
    * Un-sets the mappings for a given list of fields.
    *
    * @param string[] $field_names

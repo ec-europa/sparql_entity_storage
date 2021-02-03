@@ -302,7 +302,7 @@ function sparql_entity_storage_form_alter(&$form, FormStateInterface $form_state
         '#title' => t('Mapping'),
         '#description' => t('The RDF predicate.'),
         '#weight' => 150,
-        '#default_value' => $mapping ? $mapping->getMapping($field_name, $column_name)['predicate'] : NULL,
+        '#default_value' => $mapping ? $mapping->getFieldColumnMapping($field_name, $column_name)['predicate'] : NULL,
       ];
 
       $form['sparql_entity_storage']['base_fields_mapping'][$field_name][$column_name]['format'] = [
@@ -312,7 +312,7 @@ function sparql_entity_storage_form_alter(&$form, FormStateInterface $form_state
         '#options' => SparqlEntityStorageFieldHandler::getSupportedDataTypes(),
         '#empty_value' => '',
         '#weight' => 151,
-        '#default_value' => $mapping ? $mapping->getMapping($field_name, $column_name)['format'] : NULL,
+        '#default_value' => $mapping ? $mapping->getFieldColumnMapping($field_name, $column_name)['format'] : NULL,
       ];
     }
   }

@@ -254,14 +254,29 @@ class SparqlMapping extends ConfigEntityBase implements SparqlMappingInterface {
    * {@inheritdoc}
    */
   public function getMapping(string $field_name, string $column_name = 'value'): ?array {
-    return $this->base_fields_mapping[$field_name][$column_name] ?? NULL;
+    @trigger_error('SparqlMapping::getMapping() is deprecated in sparql_entity_storage:8.x-1.0-alpha9 and is removed in sparql_entity_storage:8.x-1.0-beta1. Use SparqlMapping::getFieldColumnMapping() instead', E_USER_DEPRECATED);
+    return $this->getFieldColumnMapping($field_name, $column_name);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getFieldMapping(string $field_name): ?array {
+    return $this->base_fields_mapping[$field_name]['field'] ?? NULL;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getFieldColumnMapping(string $field_name, string $column_name = 'value'): ?array {
+    return $this->base_fields_mapping[$field_name]['columns'][$column_name] ?? NULL;
   }
 
   /**
    * {@inheritdoc}
    */
   public function isMapped(string $field_name, string $column_name = 'value'): bool {
-    $mapping = $this->getMapping($field_name, $column_name);
+    $mapping = $this->getFieldColumnMapping($field_name, $column_name);
     return $mapping && !empty($mapping['predicate']) && !empty($mapping['format']);
   }
 
