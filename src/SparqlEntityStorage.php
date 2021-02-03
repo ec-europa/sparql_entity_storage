@@ -829,6 +829,7 @@ QUERY;
    * {@inheritdoc}
    */
   protected function doSave($id, EntityInterface $entity) {
+    /** @var \Drupal\Core\Entity\ContentEntityInterface $entity */
     $bundle = $entity->bundle();
     // Generate an ID before saving, if none is available. If the ID generation
     // occurs earlier in the process (like on EntityInterface::create()), the
