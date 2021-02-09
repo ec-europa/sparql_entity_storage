@@ -75,6 +75,13 @@ class SparqlEntityStorage extends ContentEntityStorageBase implements SparqlEnti
   protected $bundlePredicate = ['http://www.w3.org/1999/02/22-rdf-syntax-ns#type'];
 
   /**
+   * Predicate used for field item delta storage.
+   *
+   * @var string
+   */
+  protected $drupalFieldDeltaPredicate = 'http://drupal.org/ontology/field-item-delta';
+
+  /**
    * The SPARQL graph helper service object.
    *
    * @var \Drupal\sparql_entity_storage\SparqlEntityStorageGraphHandlerInterface
