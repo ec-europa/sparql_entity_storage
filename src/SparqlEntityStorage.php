@@ -103,6 +103,13 @@ class SparqlEntityStorage extends ContentEntityStorageBase implements SparqlEnti
   protected $entityIdPluginManager;
 
   /**
+   * Default language code.
+   *
+   * @var string
+   */
+  protected $defaultLangcode;
+
+  /**
    * Initialize the storage backend.
    *
    * @param \Drupal\Core\Entity\EntityTypeInterface $entity_type
@@ -152,6 +159,7 @@ class SparqlEntityStorage extends ContentEntityStorageBase implements SparqlEnti
     $this->graphHandler = $sparql_graph_handler;
     $this->fieldHandler = $sparql_field_handler;
     $this->entityIdPluginManager = $entity_id_plugin_manager;
+    $this->defaultLangcode = $language_manager->getDefaultLanguage()->getId();
   }
 
   /**
