@@ -883,7 +883,7 @@ QUERY;
     $this->alterGraph($graph, $entity);
 
     if (!$entity->isNew()) {
-      $this->deleteBeforeInsert($id, $graph_uri);
+      $this->doDeleteFromGraph([$entity->id() => $entity], $graph_uri);
     }
     try {
       $this->insert($graph, $graph_uri);
@@ -1196,45 +1196,6 @@ QUERY;
    */
   protected function buildCacheId($id) {
     return "values:{$this->entityTypeId}:$id";
-  }
-
-  /**
-   * Delete an entity before it gets saved.
-   *
-   * The difference between deleteBeforeInsert and delete method is the
-   * properties_list variable. Filtering the fields to be deleted using this
-   * variable, ensures that additional data that might be imported through an
-   * external repository are not lost during an entity update.
-   *
-   * @param string $id
-   *   The entity uri.
-   * @param string $graph_uri
-   *   The graph uri.
-   *
-   * @throws \Drupal\sparql_entity_storage\Exception\SparqlQueryException
-   *   If the SPARQL query fails.
-   * @throws \Exception
-   *   The query fails with no specific reason.
-   */
-  protected function deleteBeforeInsert(string $id, string $graph_uri): void {
-    $property_list = $this->fieldHandler->getPropertyListToArray($this->getEntityTypeId());
-    $serialized = SparqlArg::serializeUris($property_list);
-    $id = SparqlArg::uri($id);
-    $graph_uri = SparqlArg::uri($graph_uri);
-    $query = <<<QUERY
-DELETE {
-  GRAPH {$graph_uri} {
-    {$id} ?field ?value
-  }
-}
-WHERE {
-  GRAPH {$graph_uri} {
-    {$id} ?field ?value .
-    FILTER (?field IN ( {$serialized} ))
-  }
-}
-QUERY;
-    $this->sparql->query($query);
   }
 
   /**
