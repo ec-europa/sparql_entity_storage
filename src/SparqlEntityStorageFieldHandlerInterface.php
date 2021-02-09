@@ -42,6 +42,26 @@ interface SparqlEntityStorageFieldHandlerInterface {
   public function getInboundMap(string $entity_type_id): array;
 
   /**
+   * Returns the column predicates for a given field.
+   *
+   * @param string $entity_type_id
+   *   The entity type ID.
+   * @param string $field_name
+   *   The field name.
+   * @param string|null $column_name
+   *   (optional) The column name. If omitted, the main property will be used.
+   * @param string|null $bundle
+   *   (optional) If passed, filter the final array by bundle.
+   *
+   * @return string[]
+   *   An array of predicates.
+   *
+   * @throws \Drupal\sparql_entity_storage\Exception\UnmappedFieldException
+   *    Thrown when a unmapped field is requested.
+   */
+  public function getFieldColumnPredicates(string $entity_type_id, string $field_name, ?string $column_name = NULL, ?string $bundle = NULL): array;
+
+  /**
    * Returns the predicates for a given field.
    *
    * @param string $entity_type_id
@@ -58,6 +78,10 @@ interface SparqlEntityStorageFieldHandlerInterface {
    *
    * @throws \Drupal\sparql_entity_storage\Exception\UnmappedFieldException
    *    Thrown when a unmapped field is requested.
+   *
+   * @deprecated in sparql_entity_storage:8.x-1.0-alpha9 and is removed from
+   *   sparql_entity_storage:8.x-1.0-beta1. Use
+   *   SparqlEntityStorageFieldHandler::getFieldColumnPredicates() instead.
    */
   public function getFieldPredicates(string $entity_type_id, string $field_name, ?string $column_name = NULL, ?string $bundle = NULL): array;
 

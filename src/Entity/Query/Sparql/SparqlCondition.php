@@ -383,7 +383,7 @@ class SparqlCondition extends ConditionFundamentals implements SparqlConditionIn
       $column = $this->fieldHandler->getFieldMainProperty($entity_type_id, $field);
     }
 
-    $mappings = $this->fieldHandler->getFieldPredicates($entity_type_id, $field, $column);
+    $mappings = $this->fieldHandler->getFieldColumnPredicates($entity_type_id, $field, $column);
     $field_name = $field . '__' . $column;
     if (count($mappings) === 1) {
       $this->fieldMappings[$field_name] = reset($mappings);

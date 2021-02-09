@@ -242,7 +242,7 @@ class SparqlEntityStorageFieldHandler implements SparqlEntityStorageFieldHandler
   /**
    * {@inheritdoc}
    */
-  public function getFieldPredicates(string $entity_type_id, string $field_name, ?string $column_name = NULL, ?string $bundle = NULL): array {
+  public function getFieldColumnPredicates(string $entity_type_id, string $field_name, ?string $column_name = NULL, ?string $bundle = NULL): array {
     $drupal_to_sparql = $this->getOutboundMap($entity_type_id);
     if (!isset($drupal_to_sparql['fields'][$field_name])) {
       throw new UnmappedFieldException("You are requesting the mapping for a non mapped field: $field_name (entity type: $entity_type_id).");
@@ -258,6 +258,14 @@ class SparqlEntityStorageFieldHandler implements SparqlEntityStorageFieldHandler
       }
     }
     return array_filter($return);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getFieldPredicates(string $entity_type_id, string $field_name, ?string $column_name = NULL, ?string $bundle = NULL): array {
+    @trigger_error('SparqlEntityStorageFieldHandler::getFieldPredicates() is deprecated in sparql_entity_storage:8.x-1.0-alpha9 and is removed from sparql_entity_storage:8.x-1.0-beta1. Use SparqlEntityStorageFieldHandler::getFieldColumnPredicates() instead', E_USER_DEPRECATED);
+    return $this->getFieldColumnPredicates($entity_type_id, $field_name, $column_name, $bundle);
   }
 
   /**
