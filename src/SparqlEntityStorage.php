@@ -310,33 +310,31 @@ class SparqlEntityStorage extends ContentEntityStorageBase implements SparqlEnti
       return [];
     }
 
-    // @todo We should filter per entity per graph and not load the whole
-    // database only to filter later on.
-    // @see https://github.com/ec-europa/sparql_entity_storage/issues/2
     $ids_string = SparqlArg::serializeUris($ids, ' ');
-    $graphs = $this->getGraphHandler()->getEntityTypeGraphUrisFlatList($this->getEntityTypeId());
+    $graphs = $this->getGraphHandler()->getEntityTypeGraphUrisFlatList($this->getEntityTypeId(), $graph_ids);
+
     $named_graph = '';
-    foreach ($graphs as $graph) {
-      $named_graph .= 'FROM NAMED ' . SparqlArg::uri($graph) . "\n";
+    foreach (array_keys($graphs) as $graph_id) {
+      $named_graph .= '  FROM NAMED ' . SparqlArg::uri($graph_id) . "\n";
     }
 
-    // @todo Get rid of the language filter. It's here because of eurovoc:
-    // \Drupal\taxonomy\Form\OverviewTerms::buildForm loads full entities
-    // of the whole tree: 7000+ terms in 24 languages is just too much.
-    // @see https://github.com/ec-europa/sparql_entity_storage/issues/2
     $query = <<<QUERY
-SELECT ?graph ?entity_id ?predicate ?field_value
+SELECT ?graph ?id ?field ?value ?field1 ?value1
 {$named_graph}
-WHERE{
+WHERE {
   GRAPH ?graph {
-    ?entity_id ?predicate ?field_value .
-    VALUES ?entity_id { {$ids_string} } .
+    VALUES ?id { {$ids_string} } .
+    ?id ?field ?value .
+    OPTIONAL {
+      ?value ?field1 ?value1 .
+      FILTER ( isBlank(?value) ) .
+    }
   }
 }
 QUERY;
 
-    $entity_values = $this->sparql->query($query);
-    return $this->processGraphResults($entity_values, $graph_ids);
+    $results = $this->sparql->query($query);
+    return $this->processResults($results->getArrayCopy(), $graph_ids, $graphs);
   }
 
   /**
