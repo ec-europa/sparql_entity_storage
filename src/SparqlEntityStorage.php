@@ -982,43 +982,6 @@ QUERY;
   }
 
   /**
-   * Resolves the language based on entity and current site language.
-   *
-   * @param string $entity_type_id
-   *   The entity type id.
-   * @param string $field_name
-   *   The field name for which to resolve the language.
-   * @param string $langcode
-   *   A default langcode or the fields detected langcode.
-   *
-   * @return string|null
-   *   A language code or NULL, if the field has no language.
-   *
-   * @throws \Exception
-   *   Thrown when a non existing field is requested.
-   */
-  protected function resolveFieldLangcode($entity_type_id, $field_name, $langcode = NULL): ?string {
-    $format = $this->fieldHandler->getFieldFormat($entity_type_id, $field_name);
-    $non_languages = [
-      LanguageInterface::LANGCODE_NOT_SPECIFIED,
-      LanguageInterface::LANGCODE_DEFAULT,
-      LanguageInterface::LANGCODE_NOT_APPLICABLE,
-      LanguageInterface::LANGCODE_SITE_DEFAULT,
-      LanguageInterface::LANGCODE_SYSTEM,
-    ];
-
-    if ($format == SparqlEntityStorageFieldHandlerInterface::TRANSLATABLE_LITERAL && !empty($langcode) && !in_array($langcode, $non_languages)) {
-      return $langcode;
-    }
-
-    $langcode = $this->languageManager->getCurrentLanguage()->getId();
-    if (in_array($langcode, $non_languages)) {
-      return NULL;
-    }
-    return $langcode;
-  }
-
-  /**
    * Alters the graph before saving the entity.
    *
    * Implementations are able to change, delete or add items to the graph before
