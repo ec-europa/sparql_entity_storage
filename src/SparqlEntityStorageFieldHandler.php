@@ -5,10 +5,10 @@ declare(strict_types = 1);
 namespace Drupal\sparql_entity_storage;
 
 use Drupal\Core\Entity\EntityFieldManagerInterface;
+use Drupal\Core\Entity\EntityTypeBundleInfoInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Field\BaseFieldDefinition;
 use Drupal\sparql_entity_storage\Entity\Query\Sparql\SparqlArg;
-use Drupal\sparql_entity_storage\Entity\SparqlMapping;
 use Drupal\sparql_entity_storage\Event\InboundValueEvent;
 use Drupal\sparql_entity_storage\Event\OutboundValueEvent;
 use Drupal\sparql_entity_storage\Event\SparqlEntityStorageEvents;
@@ -119,6 +119,13 @@ class SparqlEntityStorageFieldHandler implements SparqlEntityStorageFieldHandler
   protected $eventDispatcher;
 
   /**
+   * The entity type bundle info service.
+   *
+   * @var \Drupal\Core\Entity\EntityTypeBundleInfoInterface
+   */
+  protected $bundleInfo;
+
+  /**
    * Constructs a QueryFactory object.
    *
    * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entity_type_manager
@@ -127,11 +134,14 @@ class SparqlEntityStorageFieldHandler implements SparqlEntityStorageFieldHandler
    *   The entity field manager.
    * @param \Symfony\Component\EventDispatcher\EventDispatcherInterface $event_dispatcher
    *   The event dispatcher service.
+   * @param \Drupal\Core\Entity\EntityTypeBundleInfoInterface $bundle_info
+   *   The entity type bundle info service.
    */
-  public function __construct(EntityTypeManagerInterface $entity_type_manager, EntityFieldManagerInterface $entity_field_manager, EventDispatcherInterface $event_dispatcher) {
+  public function __construct(EntityTypeManagerInterface $entity_type_manager, EntityFieldManagerInterface $entity_field_manager, EventDispatcherInterface $event_dispatcher, EntityTypeBundleInfoInterface $bundle_info) {
     $this->entityTypeManager = $entity_type_manager;
     $this->entityFieldManager = $entity_field_manager;
     $this->eventDispatcher = $event_dispatcher;
+    $this->bundleInfo = $bundle_info;
   }
 
   /**
@@ -150,33 +160,24 @@ class SparqlEntityStorageFieldHandler implements SparqlEntityStorageFieldHandler
   protected function buildEntityTypeProperties($entity_type_id) {
     if (empty($this->outboundMap[$entity_type_id]) && empty($this->inboundMap[$entity_type_id])) {
       $entity_type = $this->entityTypeManager->getDefinition($entity_type_id);
-
-      // @todo Support entity types without bundles or without bundle config
-      // entities, in #3.
-      // @see https://github.com/ec-europa/sparql_entity_storage/issues/3
-      $bundle_type = $entity_type->getBundleEntityType();
-
       $this->outboundMap[$entity_type_id] = $this->inboundMap[$entity_type_id] = [];
       $this->outboundMap[$entity_type_id]['bundle_key'] = $this->inboundMap[$entity_type_id]['bundle_key'] = $entity_type->getKey('bundle');
-      $bundle_entities = $this->entityTypeManager->getStorage($bundle_type)->loadMultiple();
-
-      foreach ($bundle_entities as $bundle_id => $bundle_entity) {
-        $field_definitions = $this->entityFieldManager->getFieldDefinitions($entity_type_id, $bundle_entity->id());
-        $mapping = SparqlMapping::loadByName($entity_type_id, $bundle_entity->id());
-        if (!$bundle_mapping = $mapping->getRdfType()) {
-          throw new \Exception("The {$bundle_entity->label()} SPARQL entity does not have an rdf_type set.");
+      foreach ($this->bundleInfo->getBundleInfo($entity_type_id) as $bundle_id => $bundle_info) {
+        if (empty($bundle_info['sparql_entity_storage'])) {
+          continue;
+        }
+        $field_definitions = $this->entityFieldManager->getFieldDefinitions($entity_type_id, $bundle_id);
+        if (!$bundle_mapping = $bundle_info['sparql_entity_storage']['rdf_type']) {
+          throw new \Exception("The {$bundle_info['label']} SPARQL entity does not have an rdf_type set.");
         }
         $this->outboundMap[$entity_type_id]['bundles'][$bundle_id] = $bundle_mapping;
         // More than one Drupal bundle can share the same mapped URI.
         $this->inboundMap[$entity_type_id]['bundles'][$bundle_mapping][] = $bundle_id;
-        $base_fields_mapping = $mapping->getMappings();
         foreach ($field_definitions as $field_name => $field_definition) {
           $field_storage_definition = $field_definition->getFieldStorageDefinition();
 
-          // @todo Unify field mappings in #3.
-          // @see https://github.com/ec-europa/sparql_entity_storage/issues/3
           if ($field_storage_definition instanceof BaseFieldDefinition) {
-            $field_mapping = $base_fields_mapping[$field_name] ?? NULL;
+            $field_mapping = $bundle_info['sparql_entity_storage']['base_fields_mapping'][$field_name] ?? NULL;
           }
           else {
             $field_mapping = $field_storage_definition->getThirdPartySetting('sparql_entity_storage', 'mapping');

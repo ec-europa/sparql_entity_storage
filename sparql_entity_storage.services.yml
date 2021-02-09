@@ -24,7 +24,7 @@ services:
     arguments: ['@entity_type.manager', '@event_dispatcher']
   sparql.field_handler:
     class: Drupal\sparql_entity_storage\SparqlEntityStorageFieldHandler
-    arguments: ['@entity_type.manager', '@entity_field.manager', '@event_dispatcher']
+    arguments: ['@entity_type.manager', '@entity_field.manager', '@event_dispatcher', '@entity_type.bundle.info']
   plugin.manager.sparql_entity_id:
     class: Drupal\sparql_entity_storage\SparqlEntityStorageEntityIdPluginManager
     arguments: ['@container.namespaces', '@cache.discovery', '@module_handler', '@entity_type.manager']

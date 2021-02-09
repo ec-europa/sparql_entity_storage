@@ -24,6 +24,36 @@ use Drupal\sparql_entity_storage\SparqlGraphInterface;
 use EasyRdf\Http;
 
 /**
+ * Implements hook_entity_bundle_info_alter().
+ *
+ * SPARQL storage entity types having bundles as config entities are storing
+ * their mapping information in 'sparql_mapping' entities. Expose the mapping
+ * information via EntityTypeBundleInfoInterface::getAllBundleInfo(). Entity
+ * types without bundles as config entities may, alternatively, provide mapping
+ * information via hook_entity_bundle_info_alter().
+ *
+ * @see \Drupal\Core\Entity\EntityTypeBundleInfoInterface::getAllBundleInfo()
+ * @see hook_entity_bundle_info()
+ */
+function sparql_entity_storage_entity_bundle_info_alter(array &$bundles): void {
+  $entity_type_manager = \Drupal::entityTypeManager();
+  $sparql_mapping_storage = $entity_type_manager->getStorage('sparql_mapping');
+  /** @var \Drupal\sparql_entity_storage\SparqlMappingInterface $mapping */
+  foreach ($sparql_mapping_storage->loadMultiple() as $mapping) {
+    $entity_type_id = $mapping->getTargetEntityTypeId();
+    $bundle = $mapping->getTargetBundle();
+    if (isset($bundles[$entity_type_id][$bundle])) {
+      $bundles[$entity_type_id][$bundle]['sparql_entity_storage'] = [
+        'rdf_type' => $mapping->getRdfType(),
+        'base_fields_mapping' => $mapping->getMappings(),
+        'graph' => $mapping->getGraphs(),
+        'entity_type_id' => $mapping->getEntityIdPlugin(),
+      ];
+    }
+  }
+}
+
+/**
  * Implements hook_entity_base_field_info_alter().
  */
 function sparql_entity_storage_entity_base_field_info_alter(array &$fields, EntityTypeInterface $entity_type) {

@@ -110,16 +110,13 @@ class SparqlMapping extends ConfigEntityBase implements SparqlMappingInterface {
       throw new \InvalidArgumentException("Cannot handle non-SPARQL storage entity type: {$values['entity_type_id']}.");
     }
 
-    if ($storage->getEntityType()->hasKey('bundle') && $storage->getEntityType()->getBundleEntityType()) {
-      // If this entity type supports bundles as config entities, then the
-      // bundle should have been passed.
-      if (empty($values['bundle'])) {
-        throw new \InvalidArgumentException('Missing required property: bundle.');
-      }
-    }
-    else {
-      // The bundle is the entity type ID, regardless of the passed value.
+    // The bundle is the entity type ID, regardless of the passed value.
+    if (!$storage->getEntityType()->hasKey('bundle')) {
       $values['bundle'] = $values['entity_type_id'];
+    }
+    // This entity type supports bundles, then a bundle should have been passed.
+    elseif (empty($values['bundle'])) {
+      throw new \InvalidArgumentException('Missing required property: bundle.');
     }
 
     parent::__construct($values, $entity_type);
