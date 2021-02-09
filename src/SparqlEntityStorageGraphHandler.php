@@ -181,7 +181,7 @@ class SparqlEntityStorageGraphHandler implements SparqlEntityStorageGraphHandler
   public function getEntityTypeGraphUrisFlatList(string $entity_type_id, array $limit_to_graph_ids = NULL): array {
     $graphs = $this->getEntityTypeGraphUris($entity_type_id, $limit_to_graph_ids);
     return array_reduce($graphs, function (array $uris, array $bundle_graphs): array {
-      return array_merge($uris, array_values($bundle_graphs));
+      return array_merge($uris, array_flip($bundle_graphs));
     }, []);
   }
 

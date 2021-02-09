@@ -428,10 +428,10 @@ class Query extends QueryBase implements SparqlQueryInterface {
           }
         }
       }
-      $bundle_uris['IN'] = $bundle_uris['IN'] ?: $this->graphHandler->getEntityTypeGraphUrisFlatList($this->getEntityTypeId(), $this->graphIds);
+      $bundle_uris['IN'] = $bundle_uris['IN'] ?: array_keys($this->graphHandler->getEntityTypeGraphUrisFlatList($this->getEntityTypeId(), $this->graphIds));
       return array_diff($bundle_uris['IN'], $bundle_uris['NOT IN']);
     }
-    return $this->graphHandler->getEntityTypeGraphUrisFlatList($this->getEntityTypeId(), $this->graphIds);
+    return array_keys($this->graphHandler->getEntityTypeGraphUrisFlatList($this->getEntityTypeId(), $this->graphIds));
   }
 
   /**

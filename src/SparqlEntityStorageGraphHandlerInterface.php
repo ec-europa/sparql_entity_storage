@@ -159,15 +159,15 @@ interface SparqlEntityStorageGraphHandlerInterface {
   public function bundleHasGraph(string $entity_type_id, string $bundle, string $graph_id): bool;
 
   /**
-   * Returns a plain, flat list of graph URIs related to the passed entity type.
+   * Returns alat list of graph URIs related to the passed entity type.
    *
    * @param string $entity_type_id
    *   The ID of the entity type.
-   * @param array $limit_to_graph_ids
-   *   Optionally filter the graphs to be returned.
+   * @param array|null $limit_to_graph_ids
+   *   (optional) Filter the graphs to be returned.
    *
    * @return array
-   *   A flat list of graph URIs.
+   *   A flat list of graph URIs. The keys are the URIs, the values graph IDs.
    */
   public function getEntityTypeGraphUrisFlatList(string $entity_type_id, array $limit_to_graph_ids = NULL): array;
 
