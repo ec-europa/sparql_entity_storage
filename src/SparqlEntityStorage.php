@@ -56,13 +56,6 @@ class SparqlEntityStorage extends ContentEntityStorageBase implements SparqlEnti
   protected $sparql;
 
   /**
-   * Language manager.
-   *
-   * @var \Drupal\Core\Language\LanguageManagerInterface
-   */
-  protected $languageManager;
-
-  /**
    * Entity type manager.
    *
    * @var \Drupal\Core\Entity\EntityTypeManagerInterface
@@ -156,7 +149,6 @@ class SparqlEntityStorage extends ContentEntityStorageBase implements SparqlEnti
     parent::__construct($entity_type, $entity_field_manager, $cache, $memory_cache, $entity_type_bundle_info);
     $this->sparql = $sparql;
     $this->entityTypeManager = $entity_type_manager;
-    $this->languageManager = $language_manager;
     $this->moduleHandler = $module_handler;
     $this->graphHandler = $sparql_graph_handler;
     $this->fieldHandler = $sparql_field_handler;
