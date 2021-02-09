@@ -493,7 +493,7 @@ QUERY;
     // modules to handle this.
     $this->moduleHandler->alter('sparql_bundle_load', $entity_values, $bundles);
     if (count($bundles) > 1) {
-      throw new \Exception('More than one bundles are defined for this uri.');
+      throw new \Exception('More than one bundles are defined for this URI.');
     }
     return reset($bundles);
   }

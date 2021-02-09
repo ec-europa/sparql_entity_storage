@@ -106,7 +106,7 @@ interface SparqlMappingInterface extends ConfigEntityInterface {
   /**
    * Gets all graphs.
    *
-   * @return string[
+   * @return string[]
    *   Associative array keyed by graph name, having the graph URIs as values.
    */
   public function getGraphs(): array;
@@ -252,7 +252,7 @@ interface SparqlMappingInterface extends ConfigEntityInterface {
    */
   public function getFieldColumnMapping(string $field_name, string $column_name = 'value'): ?array;
 
-    /**
+  /**
    * Un-sets the mappings for a given list of fields.
    *
    * @param string[] $field_names

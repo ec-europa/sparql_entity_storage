@@ -71,7 +71,7 @@ class SparqlEntityQueryTest extends SparqlKernelTestBase {
   }
 
   /**
-   * Tests basic functionality related to Id and bundle filtering.
+   * Tests basic functionality related to ID and bundle filtering.
    */
   public function testIdBundleFilters() {
     // Checks the '=' operator for IDs for a valid ID and a valid bundle.
