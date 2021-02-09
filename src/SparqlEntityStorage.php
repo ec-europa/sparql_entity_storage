@@ -246,26 +246,19 @@ class SparqlEntityStorage extends ContentEntityStorageBase implements SparqlEnti
    *   The query fails with no specific reason.
    */
   protected function getFromStorage(array $ids = NULL, array $graph_ids = []): array {
-    if (empty($ids)) {
-      return [];
-    }
-    $remaining_ids = $ids;
     $entities = [];
-    while (count($remaining_ids)) {
-      $operation_ids = array_slice($remaining_ids, 0, 50, TRUE);
-      foreach ($operation_ids as $k => $v) {
-        unset($remaining_ids[$k]);
-      }
-      $entities_values = $this->loadFromStorage($operation_ids, $graph_ids);
-      if ($entities_values) {
+    while ($ids) {
+      $ids_to_process = array_splice($ids, 0, 50);
+      if ($entities_values = $this->loadFromStorage($ids_to_process, $graph_ids)) {
         foreach ($entities_values as $id => $entity_values) {
           $bundle = $this->bundleKey ? $entity_values[$this->bundleKey][LanguageInterface::LANGCODE_DEFAULT] : FALSE;
           $langcode_key = $this->getEntityType()->getKey('langcode');
           $translations = [];
-          if (!empty($entities_values[$id][$langcode_key])) {
-            foreach ($entities_values[$id][$langcode_key] as $data) {
-              if (!empty(reset($data)['value'])) {
-                $translations[] = reset($data)['value'];
+          if (!empty($entity_values[$langcode_key])) {
+            foreach ($entity_values[$langcode_key] as $data) {
+              $langcode = reset($data)['value'] ?? NULL;
+              if ($langcode) {
+                $translations[] = $langcode;
               }
             }
           }
