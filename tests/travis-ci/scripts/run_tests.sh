@@ -61,7 +61,7 @@ case "${TEST}" in
 
         # Run PHPUnit.
         cd ..
-        ./vendor/bin/phpunit --verbose
+        ./vendor/bin/phpunit --verbose --testdox
         exit $?
         ;;
     *)
