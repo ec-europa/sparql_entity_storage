@@ -4,6 +4,7 @@ declare(strict_types = 1);
 
 namespace Drupal\sparql_entity_storage;
 
+use Drupal\Component\Utility\UrlHelper;
 use Drupal\Core\Entity\EntityFieldManagerInterface;
 use Drupal\Core\Entity\EntityTypeBundleInfoInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
@@ -32,7 +33,9 @@ use Symfony\Component\EventDispatcher\EventDispatcherInterface;
  *     other_bundle: ...
  *   fields:
  *     label:
+ *       type: string
  *       main_property: value
+ *       predicate: null
  *       columns:
  *         value:
  *           catalog:
@@ -46,7 +49,11 @@ use Symfony\Component\EventDispatcher\EventDispatcherInterface;
  *         other_column:
  *           catalog:
  *             ...
- *     other_field: ...
+ *     other_field:
+ *       type: entity_reference
+ *       main_property: target_id
+ *       predicate: http://example.com/reference
+ *       ...
  * other_entity_type:
  *   bundle_key: ...
  *   ...
@@ -64,18 +71,25 @@ use Symfony\Component\EventDispatcher\EventDispatcherInterface;
  *     http://example.com:
  *       - other_bundle
  *   fields:
+ *     http://example.com/field/link:
+ *       catalog: about_link
+ *       collection: link_to
+ *     http://example.com/other/field/mapping:
+ *       other_bundle: other_field_name
+ *       ...
+ *     ...
+ *   columns:
  *     http://purl.org/dc/terms/title:
  *       catalog:
  *         field_name: label
- *         column: value
+ *         name: value
  *         serialize: false
- *         type: string
  *         data_type: string
- *       other_field:
+ *       other_bundle:
  *         field_name: ...
  *         ...
  *     http://example.com/field_mapping:
- *       ....
+ *       ...
  * other_entity_type:
  *   bundle_key: ...
  *   ...
@@ -188,19 +202,31 @@ class SparqlEntityStorageFieldHandler implements SparqlEntityStorageFieldHandler
             continue;
           }
 
-          $this->outboundMap[$entity_type_id]['fields'][$field_name]['main_property'] = $field_storage_definition->getMainPropertyName();
-          foreach ($field_mapping as $column_name => $column_mapping) {
-            if (empty($column_mapping['predicate'])) {
-              continue;
-            }
+          // Filter out unmapped columns.
+          $field_mapping['columns'] = array_filter($field_mapping['columns'], function (array $column_mapping): bool {
+            return !empty($column_mapping['predicate']) && UrlHelper::isValid($column_mapping['predicate']);
+          });
 
-            // Handle the serialized values.
-            $serialize = FALSE;
-            $field_storage_schema = $field_storage_definition->getSchema()['columns'];
-            // Inflate value back into a normal item.
-            if (!empty($field_storage_schema[$column_name]['serialize'])) {
-              $serialize = TRUE;
+          // Don't process this field if its column mappings are empty.
+          if (empty($field_mapping) || empty($field_mapping['columns'])) {
+            continue;
+          }
+
+          $this->outboundMap[$entity_type_id]['fields'][$field_name]['type'] = $field_definition->getType();
+          $this->outboundMap[$entity_type_id]['fields'][$field_name]['main_property'] = $field_storage_definition->getMainPropertyName();
+          if ($is_multi_value = $field_storage_definition->isMultiple()) {
+            if (empty($field_mapping['field'])) {
+              @trigger_error('Missing a field-level predicate mapping for multi-value fields is deprecated in sparql_entity_storage:8.x-1.0-alpha9. The field-level predicate mapping for multi-value fields is mandatory in sparql_entity_storage:8.x-1.0-beta1.', E_USER_DEPRECATED);
+              $is_multi_value = FALSE;
             }
+          }
+          $this->outboundMap[$entity_type_id]['fields'][$field_name]['predicate'] = $is_multi_value ? $field_mapping['field'] : NULL;
+          if ($is_multi_value) {
+            $this->inboundMap[$entity_type_id]['fields'][$field_mapping['field']][$bundle_id] = $field_name;
+          }
+          foreach ($field_mapping['columns'] as $column_name => $column_mapping) {
+            // Handle the serialized values.
+            $serialize = !empty($field_storage_definition->getSchema()['columns'][$column_name]['serialize']);
 
             // Retrieve the property definition primitive data type.
             $property_definition = $field_storage_definition->getPropertyDefinition($column_name);
@@ -216,11 +242,10 @@ class SparqlEntityStorageFieldHandler implements SparqlEntityStorageFieldHandler
               'data_type' => $data_type,
             ];
 
-            $this->inboundMap[$entity_type_id]['fields'][$column_mapping['predicate']][$bundle_id] = [
+            $this->inboundMap[$entity_type_id]['columns'][$column_mapping['predicate']][$bundle_id] = [
               'field_name' => $field_name,
-              'column' => $column_name,
+              'name' => $column_name,
               'serialize' => $serialize,
-              'type' => $field_storage_definition->getType(),
               'data_type' => $data_type,
             ];
           }
@@ -233,6 +258,11 @@ class SparqlEntityStorageFieldHandler implements SparqlEntityStorageFieldHandler
    * {@inheritdoc}
    */
   public function getInboundMap(string $entity_type_id): array {
+    $caller_class = debug_backtrace()[1]['class'];
+    if (static::class !== $caller_class && !is_subclass_of($caller_class, static::class)) {
+      @trigger_error('Calling SparqlEntityStorageFieldHandler::getInboundMap() in public scope is deprecated in sparql_entity_storage:8.x-1.0-alpha9. The method will be protected in sparql_entity_storage:8.x-1.0-beta1. Use interface methods instead.', E_USER_DEPRECATED);
+    }
+
     if (!isset($this->inboundMap[$entity_type_id])) {
       $this->buildEntityTypeProperties($entity_type_id);
     }
@@ -299,7 +329,7 @@ class SparqlEntityStorageFieldHandler implements SparqlEntityStorageFieldHandler
    */
   public function getPropertyListToArray(string $entity_type_id): array {
     $inbound_map = $this->getInboundMap($entity_type_id);
-    return array_unique(array_keys($inbound_map['fields']));
+    return array_unique(array_keys($inbound_map['columns']));
   }
 
   /**
@@ -429,6 +459,50 @@ class SparqlEntityStorageFieldHandler implements SparqlEntityStorageFieldHandler
   public function fieldIsMapped(string $entity_type_id, string $field_name): bool {
     $outbound_map = $this->getOutboundMap($entity_type_id);
     return isset($outbound_map['fields'][$field_name]);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getFieldPredicate(string $entity_type_id, string $field_name): ?string {
+    return $this->getOutboundMap($entity_type_id)['fields'][$field_name]['predicate'] ?? NULL;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getAllFieldPredicates(string $entity_type_id): array {
+    return array_filter(array_map(function (array $data): ?string {
+      return $data['predicate'] ?? NULL;
+    }, $this->getOutboundMap($entity_type_id)['fields']));
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getColumnNameByPredicate(string $entity_type_id, string $bundle, string $column_predicate): ?string {
+    return $this->getInboundMap($entity_type_id)['columns'][$column_predicate][$bundle]['name'] ?? NULL;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getColumnFieldNameByPredicate(string $entity_type_id, string $bundle, string $column_predicate): string {
+    return $this->getInboundMap($entity_type_id)['columns'][$column_predicate][$bundle]['field_name'];
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getFieldType(string $entity_type_id, string $field_name): string {
+    return $this->getOutboundMap($entity_type_id)['fields'][$field_name]['type'];
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getFieldNameByPredicate(string $entity_type_id, string $bundle, string $field_predicate): ?string {
+    return $this->getInboundMap($entity_type_id)['fields'][$field_predicate][$bundle] ?? NULL;
   }
 
   /**
