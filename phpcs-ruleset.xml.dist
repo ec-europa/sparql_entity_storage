@@ -23,6 +23,8 @@
         <exclude name="Drupal.Semantics.FunctionTriggerError.TriggerErrorTextLayoutRelaxed" />
         <exclude name="Drupal.Semantics.FunctionTriggerError.TriggerErrorPeriodAfterSeeUrl" />
         <exclude name="Drupal.Commenting.Deprecated" />
+        <!-- See https://www.drupal.org/project/coder/issues/3197534 -->
+        <exclude name="Drupal.Commenting.FunctionComment.InvalidReturnNotVoid" />
     </rule>
     <rule ref="./vendor/drupal/coder/coder_sniffer/DrupalPractice">
         <exclude name="DrupalPractice.Objects.GlobalFunction.GlobalFunction" />
