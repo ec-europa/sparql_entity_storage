@@ -18,6 +18,11 @@
         <exclude name="Drupal.Semantics.FunctionTriggerError.TriggerErrorSeeUrlFormat" />
         <!-- Deprecation versions are allowed to include beta versions. -->
         <exclude name="Drupal.Semantics.FunctionTriggerError.TriggerErrorVersion" />
+        <!-- Drupal core message layout is not applicable. -->
+        <exclude name="Drupal.Semantics.FunctionTriggerError.TriggerErrorTextLayoutStrict" />
+        <exclude name="Drupal.Semantics.FunctionTriggerError.TriggerErrorTextLayoutRelaxed" />
+        <exclude name="Drupal.Semantics.FunctionTriggerError.TriggerErrorPeriodAfterSeeUrl" />
+        <exclude name="Drupal.Commenting.Deprecated" />
     </rule>
     <rule ref="./vendor/drupal/coder/coder_sniffer/DrupalPractice">
         <exclude name="DrupalPractice.Objects.GlobalFunction.GlobalFunction" />
