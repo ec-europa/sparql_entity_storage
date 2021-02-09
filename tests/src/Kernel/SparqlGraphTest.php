@@ -43,12 +43,12 @@ class SparqlGraphTest extends SparqlKernelTestBase {
 
     // Check that, by default, the entity exists only in the foo graph.
     $apple = $storage->load($id);
-    $this->assertEquals('foo', $apple->graph->target_id);
+    $this->assertEquals('foo', $apple->get('graph')->target_id);
     $this->assertFalse($storage->hasGraph($apple, 'default'));
 
     // Check cascading over the graph candidate list.
     $apple = $storage->load($id, ['default', 'foo']);
-    $this->assertEquals('foo', $apple->graph->target_id);
+    $this->assertEquals('foo', $apple->get('graph')->target_id);
 
     // Set the 'default' graph.
     $apple
@@ -58,7 +58,7 @@ class SparqlGraphTest extends SparqlKernelTestBase {
 
     // Check that, by default, the 'default' graph is loaded.
     $apple = $storage->load($id);
-    $this->assertEquals('default', $apple->graph->target_id);
+    $this->assertEquals('default', $apple->get('graph')->target_id);
     $this->assertTrue($storage->hasGraph($apple, 'default'));
     $this->assertTrue($storage->hasGraph($apple, 'foo'));
 
@@ -71,7 +71,7 @@ class SparqlGraphTest extends SparqlKernelTestBase {
       ->save();
 
     $apple = $storage->load($id, ['arbitrary']);
-    $this->assertEquals('arbitrary', $apple->graph->target_id);
+    $this->assertEquals('arbitrary', $apple->get('graph')->target_id);
     $this->assertEquals('Apple in an arbitrary graph', $apple->label());
 
     // Delete the foo version.
