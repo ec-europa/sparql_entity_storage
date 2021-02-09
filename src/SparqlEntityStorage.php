@@ -1021,7 +1021,7 @@ QUERY;
    */
   protected function insert(Graph $graph, string $graph_uri): Result {
     $graph_uri = SparqlArg::uri($graph_uri);
-    $query = "INSERT DATA INTO $graph_uri {\n";
+    $query = "INSERT INTO $graph_uri {\n";
     $query .= $graph->serialise('ntriples') . "\n";
     $query .= '}';
     return $this->sparql->update($query);
