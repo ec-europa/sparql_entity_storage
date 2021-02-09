@@ -744,7 +744,11 @@ QUERY;
   }
 
   /**
-   * Constructs and execute the delete query.
+   * Deletes triples corresponding to the given entities from a given graph.
+   *
+   * Only delete the triples that are controlled by the entity/field API, by
+   * filtering on field predicates. Additional data that might be imported
+   * through an external repository are not lost during entity deletion.
    *
    * @param array $entities
    *   An array of entity objects to delete.
@@ -755,19 +759,31 @@ QUERY;
    *   The query fails with no specific reason.
    */
   protected function doDeleteFromGraph(array $entities, string $graph_uri): void {
-    $entity_list = SparqlArg::serializeUris(array_keys($entities));
+    $field_columns_predicates = $this->fieldHandler->getPropertyListToArray($this->getEntityTypeId());
+    $field_predicates = $this->fieldHandler->getAllFieldPredicates($this->getEntityTypeId());
+    $all_predicates = SparqlArg::serializeUris(array_values(array_merge($field_predicates, $field_columns_predicates)));
+    // Add the field delta predicate.
+    $field_columns_predicates[] = $this->drupalFieldDeltaPredicate;
+    $field_columns_predicates = SparqlArg::serializeUris($field_columns_predicates);
+
+    $graph_uri = SparqlArg::uri($graph_uri);
+    $ids = SparqlArg::serializeUris(array_keys($entities), ' ');
 
     $query = <<<QUERY
-DELETE FROM <{$graph_uri}>
-{
-  ?entity ?field ?value
+WITH {$graph_uri}
+DELETE {
+  ?id ?field ?value .
+  ?value ?field1 ?value1 .
 }
-WHERE
-{
-  ?entity ?field ?value
-  FILTER(
-    ?entity IN ( {$entity_list} )
-  )
+WHERE {
+  VALUES ?id { {$ids} } .
+  ?entity_id ?field ?value .
+  OPTIONAL {
+    ?value ?field1 ?value1 .
+    FILTER ( isBlank(?value) ) .
+    FILTER ( ?field1 IN( {$field_columns_predicates} ) ) .
+  }
+  FILTER ( ?field IN( {$all_predicates} ) ) .
 }
 QUERY;
     $this->sparql->query($query);
