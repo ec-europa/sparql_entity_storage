@@ -15,6 +15,10 @@ field.storage.*.*.third_party.sparql_entity_storage:
           format:
             type: string
             label: 'Value format'
+    field_predicate:
+      type: string
+      label: 'Field predicate'
+      nullable: true
 
 sparql_entity_storage.graph.*:
   type: config_entity
@@ -76,6 +80,13 @@ sparql_entity_storage.mapping.*:
             format:
               type: string
               label: 'Value format'
+    field_predicates:
+      type: sequence
+      lable: 'Field level predicates'
+      nullable: true
+      sequence:
+        type: string
+        label: 'Field predicate'
     entity_id_plugin:
       type: string
       label: 'The plugin that generates the entity ID'
