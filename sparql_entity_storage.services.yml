@@ -77,3 +77,8 @@ services:
     class: Drupal\sparql_entity_storage\EventSubscriber\SparqlContentTypesSubscriber
     tags:
       - { name: event_subscriber }
+  sparql.sparql_mapping.subscriber:
+    class: Drupal\sparql_entity_storage\EventSubscriber\SparqlMappingSubscriber
+    arguments: ['@entity_type.bundle.info']
+    tags:
+      - { name: event_subscriber }
