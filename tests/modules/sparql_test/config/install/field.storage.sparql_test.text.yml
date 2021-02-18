@@ -7,14 +7,12 @@ dependencies:
 third_party_settings:
   sparql_entity_storage:
     mapping:
-      field: null
-      columns:
-        value:
-          predicate: 'http://purl.org/dc/terms/description'
-          format: t_literal
-        format:
-          predicate: 'http://purl.org/dc/terms/description/format'
-          format: t_literal
+      value:
+        predicate: 'http://purl.org/dc/terms/description'
+        format: t_literal
+      format:
+        predicate: 'http://purl.org/dc/terms/description/format'
+        format: t_literal
 id: sparql_test.text
 field_name: text
 entity_type: sparql_test

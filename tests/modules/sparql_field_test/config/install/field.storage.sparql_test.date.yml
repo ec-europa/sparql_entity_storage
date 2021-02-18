@@ -7,11 +7,9 @@ dependencies:
 third_party_settings:
   sparql_entity_storage:
     mapping:
-      field: null
-      columns:
-        value:
-          predicate: 'http://example.com/date'
-          format: 'xsd:dateTime'
+      value:
+        predicate: 'http://example.com/date'
+        format: 'xsd:dateTime'
 id: sparql_test.date
 field_name: date
 entity_type: sparql_test
