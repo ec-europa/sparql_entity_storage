@@ -193,41 +193,41 @@ class SparqlEntityStorageFieldHandler implements SparqlEntityStorageFieldHandler
           $field_storage_definition = $field_definition->getFieldStorageDefinition();
 
           if ($field_storage_definition instanceof BaseFieldDefinition) {
-            $field_mapping = $bundle_info['sparql_entity_storage']['base_fields_mapping'][$field_name] ?? NULL;
+            $column_mappings = $bundle_info['sparql_entity_storage']['base_fields_mapping'][$field_name] ?? NULL;
+            $field_predicate = $bundle_info['sparql_entity_storage']['field_predicates'][$field_name] ?? NULL;
           }
           else {
-            $field_mapping = $field_storage_definition->getThirdPartySetting('sparql_entity_storage', 'mapping');
+            $column_mappings = $field_storage_definition->getThirdPartySetting('sparql_entity_storage', 'mapping');
+            $field_predicate = $field_storage_definition->getThirdPartySetting('sparql_entity_storage', 'field_predicate');
           }
 
-          // This field is not mapped.
-          if (!$field_mapping) {
-            continue;
-          }
-
-          // Filter out unmapped columns.
-          $field_mapping['columns'] = array_filter($field_mapping['columns'], function (array $column_mapping): bool {
+          // Filter out unmapped columns or columns with invalid predicate.
+          $column_mappings = array_filter($column_mappings, function (array $column_mapping): bool {
             return !empty($column_mapping['predicate']) && UrlHelper::isValid($column_mapping['predicate']);
           });
 
-          // Don't process this field if its column mappings are empty.
-          if (empty($field_mapping) || empty($field_mapping['columns'])) {
+          // Don't process this field if it has no column mappings.
+          if (!$column_mappings) {
             continue;
           }
 
-          $this->outboundMap[$entity_type_id]['fields'][$field_name]['type'] = $field_definition->getType();
-          $this->outboundMap[$entity_type_id]['fields'][$field_name]['main_property'] = $field_storage_definition->getMainPropertyName();
-          $this->outboundMap[$entity_type_id]['fields'][$field_name]['cardinality'] = $field_storage_definition->getCardinality();
+          $this->outboundMap[$entity_type_id]['fields'][$field_name] = [
+            'type' => $field_definition->getType(),
+            'main_property' => $field_storage_definition->getMainPropertyName(),
+            'cardinality' => $field_storage_definition->getCardinality(),
+          ];
+
           if ($is_multi_value = $field_storage_definition->isMultiple()) {
-            if (empty($field_mapping['field'])) {
+            if (!$field_predicate) {
               @trigger_error('Missing a field-level predicate mapping for multi-value fields is deprecated in sparql_entity_storage:8.x-1.0-alpha9. The field-level predicate mapping for multi-value fields is mandatory in sparql_entity_storage:8.x-1.0-beta1.', E_USER_DEPRECATED);
               $is_multi_value = FALSE;
             }
           }
-          $this->outboundMap[$entity_type_id]['fields'][$field_name]['predicate'] = $is_multi_value ? $field_mapping['field'] : NULL;
+          $this->outboundMap[$entity_type_id]['fields'][$field_name]['predicate'] = $is_multi_value ? $field_predicate : NULL;
           if ($is_multi_value) {
-            $this->inboundMap[$entity_type_id]['fields'][$field_mapping['field']][$bundle_id] = $field_name;
+            $this->inboundMap[$entity_type_id]['fields'][$field_predicate][$bundle_id] = $field_name;
           }
-          foreach ($field_mapping['columns'] as $column_name => $column_mapping) {
+          foreach ($column_mappings as $column_name => $column_mapping) {
             // Handle the serialized values.
             $serialize = !empty($field_storage_definition->getSchema()['columns'][$column_name]['serialize']);
 
