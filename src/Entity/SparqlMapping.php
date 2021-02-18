@@ -251,8 +251,11 @@ class SparqlMapping extends ConfigEntityBase implements SparqlMappingInterface {
    * {@inheritdoc}
    */
   public function getMapping(string $field_name, string $column_name = 'value'): ?array {
-    @trigger_error('SparqlMapping::getMapping() is deprecated in sparql_entity_storage:8.x-1.0-alpha9 and is removed in sparql_entity_storage:8.x-1.0-beta1. Use SparqlMapping::getFieldColumnMapping() instead', E_USER_DEPRECATED);
-    return $this->getFieldColumnMapping($field_name, $column_name);
+    @trigger_error('SparqlMapping::getMapping() is deprecated in sparql_entity_storage:8.x-1.0-alpha9 and is removed in sparql_entity_storage:8.x-1.0-beta1. Use SparqlMapping::getFieldColumnMappingPredicate() and/or SparqlMapping::getFieldColumnMappingFormat() instead', E_USER_DEPRECATED);
+    return [
+      'predicate' => $this->getFieldColumnMappingPredicate($field_name, $column_name),
+      'format' => $this->getFieldColumnMappingFormat($field_name, $column_name),
+    ];
   }
 
   /**
@@ -265,16 +268,22 @@ class SparqlMapping extends ConfigEntityBase implements SparqlMappingInterface {
   /**
    * {@inheritdoc}
    */
-  public function getFieldColumnMapping(string $field_name, string $column_name = 'value'): ?array {
-    return $this->base_fields_mapping[$field_name]['columns'][$column_name] ?? NULL;
+  public function getFieldColumnMappingPredicate(string $field_name, string $column_name = 'value'): ?string {
+    return $this->base_fields_mapping[$field_name][$column_name]['predicate'] ?? NULL;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getFieldColumnMappingFormat(string $field_name, string $column_name = 'value'): ?string {
+    return $this->base_fields_mapping[$field_name][$column_name]['format'] ?? NULL;
   }
 
   /**
    * {@inheritdoc}
    */
   public function isMapped(string $field_name, string $column_name = 'value'): bool {
-    $mapping = $this->getFieldColumnMapping($field_name, $column_name);
-    return $mapping && !empty($mapping['predicate']) && !empty($mapping['format']);
+    return $this->getFieldColumnMappingPredicate($field_name, $column_name) && $this->getFieldColumnMappingFormat($field_name, $column_name);
   }
 
   /**

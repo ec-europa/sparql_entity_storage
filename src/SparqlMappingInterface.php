@@ -222,7 +222,8 @@ interface SparqlMappingInterface extends ConfigEntityInterface {
    *
    * @deprecated in sparql_entity_storage:8.x-1.0-alpha9 and is removed in
    *   sparql_entity_storage:8.x-1.0-beta1. Use
-   *   SparqlMapping::getFieldColumnMapping() instead.
+   *   SparqlMapping::getFieldColumnMappingPredicate() and/or
+   *   SparqlMapping::getFieldColumnMappingFormat() instead.
    */
   public function getMapping(string $field_name, string $column_name = 'value'): ?array;
 
@@ -240,17 +241,30 @@ interface SparqlMappingInterface extends ConfigEntityInterface {
   public function getFieldMapping(string $field_name): ?array;
 
   /**
-   * Returns the mapping for a specific column of a base field.
+   * Returns the mapping predicate for a specific column of a base field.
    *
    * @param string $field_name
    *   The field name.
    * @param string $column_name
    *   (optional) The column name. Defaults to 'value'.
    *
-   * @return array|null
-   *   Associative array with two keys: 'predicate' and 'format'.
+   * @return string|null
+   *   The mapping predicate for a specific column of a base field, if any.
    */
-  public function getFieldColumnMapping(string $field_name, string $column_name = 'value'): ?array;
+  public function getFieldColumnMappingPredicate(string $field_name, string $column_name = 'value'): ?string;
+
+  /**
+   * Returns the mapping format for a specific column of a base field.
+   *
+   * @param string $field_name
+   *   The field name.
+   * @param string $column_name
+   *   (optional) The column name. Defaults to 'value'.
+   *
+   * @return string|null
+   *   The mapping format for a specific column of a base field, if any.
+   */
+  public function getFieldColumnMappingFormat(string $field_name, string $column_name = 'value'): ?string;
 
   /**
    * Un-sets the mappings for a given list of fields.
