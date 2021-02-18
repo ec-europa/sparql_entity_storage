@@ -395,14 +395,11 @@ QUERY;
         foreach (array_diff_key($entity, array_flip($processed_fields)) as $predicate => $languages) {
           // Complex field with field predicate.
           if ($field_name = $this->fieldHandler->getFieldNameByPredicate($entity_type_id, $bundle, $predicate)) {
-            $cardinality = $this->fieldHandler->getFieldCardinality($entity_type_id, $field_name);
             foreach ($languages as $langcode => $values) {
               foreach ($values as $delta => $item) {
-                if ($cardinality === FieldStorageConfigInterface::CARDINALITY_UNLIMITED || $delta < $cardinality) {
-                  foreach ($item as $column_predicate => $value) {
-                    $column_name = $this->fieldHandler->getColumnNameByPredicate($entity_type_id, $bundle, $column_predicate);
-                    $entity[$field_name][$langcode][$delta][$column_name] = $this->fieldHandler->getInboundValue($entity_type_id, $field_name, $value, $langcode, $column_name, $bundle);
-                  }
+                foreach ($item as $column_predicate => $value) {
+                  $column_name = $this->fieldHandler->getColumnNameByPredicate($entity_type_id, $bundle, $column_predicate);
+                  $entity[$field_name][$langcode][$delta][$column_name] = $this->fieldHandler->getInboundValue($entity_type_id, $field_name, $value, $langcode, $column_name, $bundle);
                 }
               }
             }
@@ -410,12 +407,9 @@ QUERY;
           // Simple column mappings.
           elseif ($column_name = $this->fieldHandler->getColumnNameByPredicate($entity_type_id, $bundle, $predicate)) {
             $field_name = $this->fieldHandler->getColumnFieldNameByPredicate($entity_type_id, $bundle, $predicate);
-            $cardinality = $this->fieldHandler->getFieldCardinality($entity_type_id, $field_name);
             foreach ($languages as $langcode => $values) {
               foreach ($values as $delta => $value) {
-                if ($cardinality === FieldStorageConfigInterface::CARDINALITY_UNLIMITED || $delta < $cardinality) {
-                  $entity[$field_name][$langcode][$delta][$column_name] = $this->fieldHandler->getInboundValue($entity_type_id, $field_name, $value, $langcode, $column_name, $bundle);
-                }
+                $entity[$field_name][$langcode][$delta][$column_name] = $this->fieldHandler->getInboundValue($entity_type_id, $field_name, $value, $langcode, $column_name, $bundle);
               }
             }
           }
@@ -946,6 +940,7 @@ QUERY;
     $lang_array = $this->toLangArray($entity);
     foreach ($lang_array as $field_name => $langcode_data) {
       $field_predicate = $this->fieldHandler->getFieldPredicate($entity_type_id, $field_name);
+      $cardinality = $this->fieldHandler->getFieldCardinality($entity_type_id, $field_name);
       foreach ($langcode_data as $langcode => $field_item_list) {
         foreach ($field_item_list as $delta => $field_item) {
           // This is a multi-value field, we store the subsequent field item
@@ -974,6 +969,11 @@ QUERY;
             else {
               $graph->add($id, $predicate, $value);
             }
+          }
+
+          if ($cardinality !== FieldStorageConfigInterface::CARDINALITY_UNLIMITED && $cardinality === $delta + 1) {
+            // Just reached the max delta for fields with limited cardinality.
+            break;
           }
         }
       }
