@@ -20,6 +20,7 @@ use Drupal\Core\Extension\ModuleHandlerInterface;
 use Drupal\Core\Field\FieldDefinitionInterface;
 use Drupal\Core\Language\LanguageInterface;
 use Drupal\Core\Language\LanguageManagerInterface;
+use Drupal\field\FieldStorageConfigInterface;
 use Drupal\sparql_entity_storage\Driver\Database\sparql\ConnectionInterface;
 use Drupal\sparql_entity_storage\Entity\Query\Sparql\SparqlArg;
 use Drupal\sparql_entity_storage\Entity\SparqlGraph;
@@ -394,11 +395,14 @@ QUERY;
         foreach (array_diff_key($entity, array_flip($processed_fields)) as $predicate => $languages) {
           // Complex field with field predicate.
           if ($field_name = $this->fieldHandler->getFieldNameByPredicate($entity_type_id, $bundle, $predicate)) {
+            $cardinality = $this->fieldHandler->getFieldCardinality($entity_type_id, $field_name);
             foreach ($languages as $langcode => $values) {
               foreach ($values as $delta => $item) {
-                foreach ($item as $column_predicate => $value) {
-                  $column_name = $this->fieldHandler->getColumnNameByPredicate($entity_type_id, $bundle, $column_predicate);
-                  $entity[$field_name][$langcode][$delta][$column_name] = $this->fieldHandler->getInboundValue($entity_type_id, $field_name, $value, $langcode, $column_name, $bundle);
+                if ($cardinality === FieldStorageConfigInterface::CARDINALITY_UNLIMITED || $delta < $cardinality) {
+                  foreach ($item as $column_predicate => $value) {
+                    $column_name = $this->fieldHandler->getColumnNameByPredicate($entity_type_id, $bundle, $column_predicate);
+                    $entity[$field_name][$langcode][$delta][$column_name] = $this->fieldHandler->getInboundValue($entity_type_id, $field_name, $value, $langcode, $column_name, $bundle);
+                  }
                 }
               }
             }
@@ -406,15 +410,18 @@ QUERY;
           // Simple column mappings.
           elseif ($column_name = $this->fieldHandler->getColumnNameByPredicate($entity_type_id, $bundle, $predicate)) {
             $field_name = $this->fieldHandler->getColumnFieldNameByPredicate($entity_type_id, $bundle, $predicate);
+            $cardinality = $this->fieldHandler->getFieldCardinality($entity_type_id, $field_name);
             foreach ($languages as $langcode => $values) {
               foreach ($values as $delta => $value) {
-                $entity[$field_name][$langcode][$delta][$column_name] = $this->fieldHandler->getInboundValue($entity_type_id, $field_name, $value, $langcode, $column_name, $bundle);
+                if ($cardinality === FieldStorageConfigInterface::CARDINALITY_UNLIMITED || $delta < $cardinality) {
+                  $entity[$field_name][$langcode][$delta][$column_name] = $this->fieldHandler->getInboundValue($entity_type_id, $field_name, $value, $langcode, $column_name, $bundle);
+                }
               }
             }
           }
 
-          // Remove the already processed fields but also the arbitrary values
-          // no covered by the Drupal entity/field API.
+          // Remove already processed fields but also the arbitrary values, not
+          // covered by the Drupal entity/field API.
           unset($entity[$predicate]);
         }
       });
@@ -913,6 +920,7 @@ QUERY;
    */
   protected function doSave($id, EntityInterface $entity) {
     /** @var \Drupal\Core\Entity\ContentEntityInterface $entity */
+    $entity_type_id = $this->getEntityTypeId();
     $bundle = $entity->bundle();
     // Generate an ID before saving, if none is available. If the ID generation
     // occurs earlier in the process (like on EntityInterface::create()), the
@@ -929,15 +937,15 @@ QUERY;
     // If the graph is not specified, fallback to the default one for the entity
     // type.
     if ($entity->get('graph')->isEmpty()) {
-      $entity->set('graph', $this->getGraphHandler()->getDefaultGraphId($this->getEntityTypeId()));
+      $entity->set('graph', $this->getGraphHandler()->getDefaultGraphId($entity_type_id));
     }
 
     $graph_id = $entity->get('graph')->target_id;
-    $graph_uri = $this->getGraphHandler()->getBundleGraphUri($entity->getEntityTypeId(), $entity->bundle(), $graph_id);
+    $graph_uri = $this->getGraphHandler()->getBundleGraphUri($entity_type_id, $bundle, $graph_id);
     $graph = self::getGraph($graph_uri);
     $lang_array = $this->toLangArray($entity);
     foreach ($lang_array as $field_name => $langcode_data) {
-      $field_predicate = $this->fieldHandler->getFieldPredicate($this->getEntityTypeId(), $field_name);
+      $field_predicate = $this->fieldHandler->getFieldPredicate($entity_type_id, $field_name);
       foreach ($langcode_data as $langcode => $field_item_list) {
         foreach ($field_item_list as $delta => $field_item) {
           // This is a multi-value field, we store the subsequent field item
@@ -954,12 +962,12 @@ QUERY;
           foreach ($field_item as $column => $value) {
             // Filter out empty values or non mapped fields. The ID is also
             // excluded as it is not mapped.
-            if ($value === NULL || $value === '' || !$this->fieldHandler->hasFieldPredicate($this->getEntityTypeId(), $bundle, $field_name, $column)) {
+            if ($value === NULL || $value === '' || !$this->fieldHandler->hasFieldPredicate($entity_type_id, $bundle, $field_name, $column)) {
               continue;
             }
-            $predicate = $this->fieldHandler->getFieldColumnPredicates($this->getEntityTypeId(), $field_name, $column, $bundle);
+            $predicate = $this->fieldHandler->getFieldColumnPredicates($entity_type_id, $field_name, $column, $bundle);
             $predicate = reset($predicate);
-            $value = $this->fieldHandler->getOutboundValue($this->getEntityTypeId(), $field_name, $value, $langcode, $column, $bundle);
+            $value = $this->fieldHandler->getOutboundValue($entity_type_id, $field_name, $value, $langcode, $column, $bundle);
             if ($field_predicate) {
               $graph->add($bnode_id, $predicate, $value);
             }

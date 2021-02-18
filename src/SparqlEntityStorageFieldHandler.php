@@ -35,6 +35,7 @@ use Symfony\Component\EventDispatcher\EventDispatcherInterface;
  *     label:
  *       type: string
  *       main_property: value
+ *       cardinality: 1
  *       predicate: null
  *       columns:
  *         value:
@@ -52,6 +53,7 @@ use Symfony\Component\EventDispatcher\EventDispatcherInterface;
  *     other_field:
  *       type: entity_reference
  *       main_property: target_id
+ *       cardinality: -1
  *       predicate: http://example.com/reference
  *       ...
  * other_entity_type:
@@ -214,6 +216,7 @@ class SparqlEntityStorageFieldHandler implements SparqlEntityStorageFieldHandler
 
           $this->outboundMap[$entity_type_id]['fields'][$field_name]['type'] = $field_definition->getType();
           $this->outboundMap[$entity_type_id]['fields'][$field_name]['main_property'] = $field_storage_definition->getMainPropertyName();
+          $this->outboundMap[$entity_type_id]['fields'][$field_name]['cardinality'] = $field_storage_definition->getCardinality();
           if ($is_multi_value = $field_storage_definition->isMultiple()) {
             if (empty($field_mapping['field'])) {
               @trigger_error('Missing a field-level predicate mapping for multi-value fields is deprecated in sparql_entity_storage:8.x-1.0-alpha9. The field-level predicate mapping for multi-value fields is mandatory in sparql_entity_storage:8.x-1.0-beta1.', E_USER_DEPRECATED);
@@ -466,6 +469,13 @@ class SparqlEntityStorageFieldHandler implements SparqlEntityStorageFieldHandler
    */
   public function getFieldPredicate(string $entity_type_id, string $field_name): ?string {
     return $this->getOutboundMap($entity_type_id)['fields'][$field_name]['predicate'] ?? NULL;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getFieldCardinality(string $entity_type_id, string $field_name): int {
+    return $this->getOutboundMap($entity_type_id)['fields'][$field_name]['cardinality'];
   }
 
   /**
