@@ -5,16 +5,10 @@
  * Includes installation functions for the sparql_entity_storage module.
  */
 
-declare(strict_types = 1);
-
-use Drupal\Core\Config\Entity\ConfigEntityUpdater;
-use Drupal\field\FieldStorageConfigInterface;
-use Drupal\sparql_entity_storage\SparqlMappingInterface;
-
 /**
  * Implements hook_requirements().
  */
-function sparql_entity_storage_requirements($phase): array {
+function sparql_entity_storage_requirements($phase) {
   $requirements = [];
   if ($phase !== 'runtime') {
     return $requirements;
@@ -30,38 +24,4 @@ function sparql_entity_storage_requirements($phase): array {
   }
 
   return $requirements + sparql_entity_storage_virtuoso_permission_requirements();
-}
-
-/**
- * Restructure the mappings (1).
- */
-function sparql_entity_storage_update_8001(array &$sandbox): void {
-  \Drupal::classResolver(ConfigEntityUpdater::class)->update($sandbox, 'field_storage_config', function (FieldStorageConfigInterface $field_storage_config): bool {
-    if (in_array('sparql_entity_storage', $field_storage_config->getThirdPartyProviders(), TRUE)) {
-      $mapping = [
-        'field' => NULL,
-        'columns' => $field_storage_config->getThirdPartySetting('sparql_entity_storage', 'mapping'),
-      ];
-      $field_storage_config->setThirdPartySetting('sparql_entity_storage', 'mapping', $mapping);
-      return TRUE;
-    }
-    return FALSE;
-  });
-}
-
-/**
- * Restructure the mappings (2).
- */
-function sparql_entity_storage_update_8002(array &$sandbox): void {
-  \Drupal::classResolver(ConfigEntityUpdater::class)->update($sandbox, 'sparql_mapping', function (SparqlMappingInterface $sparql_mapping): bool {
-    $base_fields_mapping = [];
-    foreach ($sparql_mapping->get('base_fields_mapping') as $field_name => $columns) {
-      $base_fields_mapping[$field_name] = [
-        'field' => NULL,
-        'columns' => $columns,
-      ];
-    }
-    $sparql_mapping->set('base_fields_mapping', $base_fields_mapping);
-    return TRUE;
-  });
 }
