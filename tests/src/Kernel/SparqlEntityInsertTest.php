@@ -141,8 +141,8 @@ class SparqlEntityInsertTest extends SparqlKernelTestBase {
    * @return mixed
    *   The retrieved value or NULL if no value exists.
    *
-   * @todo: Remove this when the deltas are supported.
-   * @todo: Discuss whether we need this in the storage level.
+   * @todo Remove this when the deltas are supported.
+   * @todo Discuss whether we need this in the storage level.
    */
   protected function getEntityValue(ContentEntityInterface $entity, string $field_name) {
     $value = $entity->get($field_name)->getValue();

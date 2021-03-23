@@ -245,7 +245,7 @@ class Query extends QueryBase implements SparqlQueryInterface {
       // Remap the entity reference default tag to the SPARQL entity reference
       // because the first one requires that the query is an instance of the
       // SelectInterface.
-      // @todo: Maybe overwrite the default selection class?
+      // @todo Maybe overwrite the default selection class?
       if (isset($this->alterTags['entity_reference'])) {
         $this->alterTags['sparql_reference'] = $this->alterTags['entity_reference'];
         unset($this->alterTags['entity_reference']);
