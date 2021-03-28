@@ -589,9 +589,6 @@ class SparqlCondition extends ConditionFundamentals implements SparqlConditionIn
    *
    * @param array $condition
    *   An array that contains the 'field', 'value', 'operator' values.
-   *
-   * @return string
-   *   A condition fragment string.
    */
   protected function compileExists(array $condition): void {
     $prefix = self::$filterOperatorMap[$condition['operator']]['prefix'];
@@ -612,7 +609,7 @@ class SparqlCondition extends ConditionFundamentals implements SparqlConditionIn
     // replace it, in order to avoid creating an EXISTS and NOT EXISTS on the
     // same property.
     if ($key !== FALSE) {
-      $this->conditionFragments[$key] =  $prefix . $this->conditionFragments[$key] . $suffix;
+      $this->conditionFragments[$key] = $prefix . $this->conditionFragments[$key] . $suffix;
     }
     else {
       $this->addConditionFragment($prefix . $condition_string . $suffix);
