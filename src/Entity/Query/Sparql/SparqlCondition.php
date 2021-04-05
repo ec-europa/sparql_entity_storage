@@ -380,6 +380,7 @@ class SparqlCondition extends ConditionFundamentals implements SparqlConditionIn
     }
 
     $mappings = $this->fieldHandler->getFieldPredicates($entity_type_id, $field, $column);
+    $mappings = array_values(array_unique($mappings));
     $field_name = $field . '__' . $column;
     if (count($mappings) === 1) {
       $this->fieldMappings[$field_name] = reset($mappings);
@@ -395,7 +396,7 @@ class SparqlCondition extends ConditionFundamentals implements SparqlConditionIn
       $this->fieldMappingConditions[$field_name] = [
         'field' => $field,
         'column' => $column,
-        'value' => array_values(array_unique($mappings)),
+        'value' => $mappings,
         'operator' => 'IN',
       ];
     }
