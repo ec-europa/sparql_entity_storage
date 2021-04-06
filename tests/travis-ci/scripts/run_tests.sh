@@ -1,10 +1,12 @@
 #!/bin/bash
 
+set -x
+
 install_codebase () {
-    mkdir -p ${SITE_DIR}/web/modules
-    cp ${TRAVIS_BUILD_DIR}/tests/travis-ci/fixtures/composer.json.dist ${SITE_DIR}/composer.json
-    cd ${SITE_DIR}
-    perl -i -pe's/\$\{([^}]+)\}/$ENV{$1}/' composer.json
+    env
+    mkdir -p "${SITE_DIR}/web/modules"
+    cp "${TRAVIS_BUILD_DIR}/tests/travis-ci/fixtures/composer.json.dist" "${SITE_DIR}/composer.json"
+    perl -i -pe's/\$\{([^}]+)\}/$ENV{$1}/' "${SITE_DIR}/composer.json"
     COMPOSER_MEMORY_LIMIT=-1 composer install --no-interaction --prefer-dist
     ln -s ${TRAVIS_BUILD_DIR} ${SITE_DIR}/web/modules/sparql_entity_storage
 }
