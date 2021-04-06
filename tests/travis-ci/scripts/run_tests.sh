@@ -6,6 +6,7 @@ install_codebase () {
     cd ${SITE_DIR}
     perl -i -pe's/\$\{([^}]+)\}/$ENV{$1}/' composer.json
     COMPOSER_MEMORY_LIMIT=-1 composer install --no-interaction --prefer-dist
+    ln -s ${TRAVIS_BUILD_DIR} ${SITE_DIR}/web/modules/sparql_entity_storage
 }
 
 case "${TEST}" in
@@ -38,29 +39,8 @@ case "${TEST}" in
         # Sleep to ensure that docker services are available.
         sleep 15
 
-        # Create the MySQL database.
-        mysql -e 'CREATE DATABASE sparql_entity_storage_test'
-        mysql -e 'CREATE DATABASE sparql_entity_storage_test_phpunit'
-
-        # Install Drupal.
-        ./vendor/bin/drush site:install testing --yes --root=${SITE_DIR}/web --db-url=mysql://root:@127.0.0.1/sparql_entity_storage_test
-
-        # Add the SPARQL connection to settings.php.
-        chmod 0775 ${SITE_DIR}/web/sites/default/settings.php
-        cat ${TRAVIS_BUILD_DIR}/tests/travis-ci/fixtures/connection.txt >> ${SITE_DIR}/web/sites/default/settings.php
-
-        # Enable the 'rdf_entity' module.
-        ./vendor/bin/drush pm:enable sparql_entity_storage --yes --root=${SITE_DIR}/web
-
-        # Start the webserver for browser tests.
-        cd ${SITE_DIR}/web
-        nohup php -S localhost:8888 > /dev/null 2>&1 &
-
-        # Wait until the web server is responding.
-        until curl -s localhost:8888; do true; done > /dev/null
-
         # Run PHPUnit.
-        cd ..
+        cd ${SITE_DIR} || exit
         ./vendor/bin/phpunit --verbose
         exit $?
         ;;
