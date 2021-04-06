@@ -6,6 +6,7 @@ install_codebase () {
     cd ${SITE_DIR}
     perl -i -pe's/\$\{([^}]+)\}/$ENV{$1}/' composer.json
     COMPOSER_MEMORY_LIMIT=-1 composer install --no-interaction --prefer-dist
+    ln -s ${TRAVIS_BUILD_DIR} ${TRAVIS_BUILD_DIR}/web/modules/sparql_entity_storage
 }
 
 case "${TEST}" in
