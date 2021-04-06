@@ -1,9 +1,6 @@
 #!/bin/bash
 
-set -x
-
 install_codebase () {
-    env
     mkdir -p "${SITE_DIR}/web/modules"
     cp "${TRAVIS_BUILD_DIR}/tests/travis-ci/fixtures/composer.json.dist" "${SITE_DIR}/composer.json"
     perl -i -pe's/\$\{([^}]+)\}/$ENV{$1}/' "${SITE_DIR}/composer.json"
