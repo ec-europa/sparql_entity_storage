@@ -70,7 +70,7 @@ class SparqlCondition extends ConditionFundamentals implements SparqlConditionIn
     'ENDS WITH' => ['prefix' => 'FILTER(STRENDS(', 'suffix' => '))'],
     'LIKE' => ['prefix' => 'FILTER(CONTAINS(', 'suffix' => '))'],
     'NOT LIKE' => ['prefix' => 'FILTER(!CONTAINS(', 'suffix' => '))'],
-    'EXISTS' => ['prefix' => 'FILTER EXISTS {', 'suffix' => '}'],
+    'EXISTS' => ['prefix' => '', 'suffix' => ''],
     'NOT EXISTS' => ['prefix' => 'FILTER NOT EXISTS {', 'suffix' => '}'],
     '<' => ['prefix' => '', 'suffix' => ''],
     '>' => ['prefix' => '', 'suffix' => ''],
