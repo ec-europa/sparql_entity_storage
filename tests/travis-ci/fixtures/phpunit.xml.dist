@@ -9,8 +9,6 @@
     <php>
         <ini name="error_reporting" value="32767"/>
         <ini name="memory_limit" value="-1"/>
-        <env name="SIMPLETEST_BASE_URL" value="http://localhost:8888"/>
-        <env name="SIMPLETEST_DB" value="mysql://root:@127.0.0.1/sparql_entity_storage_test_phpunit"/>
         <env name="SIMPLETEST_SPARQL_DB" value="sparql://127.0.0.1:8890?module=sparql_entity_storage"/>
         <env name="BROWSERTEST_OUTPUT_DIRECTORY" value="/tmp"/>
         <env name="BROWSERTEST_OUTPUT_FILE" value="/tmp/browser_output/outputfile.txt"/>
