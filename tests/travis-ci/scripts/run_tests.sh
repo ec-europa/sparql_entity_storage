@@ -7,8 +7,8 @@ install_codebase () {
     mkdir -p "${SITE_DIR}/web/modules"
     cp "${TRAVIS_BUILD_DIR}/tests/travis-ci/fixtures/composer.json.dist" "${SITE_DIR}/composer.json"
     perl -i -pe's/\$\{([^}]+)\}/$ENV{$1}/' "${SITE_DIR}/composer.json"
+    ln -s "${TRAVIS_BUILD_DIR}" "${SITE_DIR}/web/modules/sparql_entity_storage"
     cd "${SITE_DIR}" && COMPOSER_MEMORY_LIMIT=-1 composer install --no-interaction --prefer-dist
-    cp -R "${TRAVIS_BUILD_DIR}" "${SITE_DIR}/web/modules/sparql_entity_storage"
 }
 
 case "${TEST}" in
