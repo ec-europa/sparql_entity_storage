@@ -442,10 +442,11 @@ class SparqlCondition extends ConditionFundamentals implements SparqlConditionIn
       $field_name = $condition['field'] . '__' . $condition['column'];
       $field_predicate = $this->fieldMappings[$field_name];
       $condition_string = self::ID_KEY . ' ' . $this->escapePredicate($field_predicate) . ' ' . SparqlArg::toVar($field_name);
+      $this->addConditionFragment($condition_string);
 
       $condition['value'] = SparqlArg::toResourceUris($condition['value']);
       $condition['field'] = $field_predicate;
-      $condition_string .= ' . ' . $this->compileValuesFilter($condition);
+      $condition_string = $this->compileValuesFilter($condition);
       $this->addConditionFragment($condition_string);
     }
   }
@@ -500,8 +501,11 @@ class SparqlCondition extends ConditionFundamentals implements SparqlConditionIn
           break;
 
         case 'EXISTS':
-        case 'NOT EXISTS':
           $this->compileExists($condition);
+          break;
+
+        case 'NOT EXISTS':
+          $this->compileNotExists($condition);
           break;
 
         case 'CONTAINS':
@@ -586,35 +590,66 @@ class SparqlCondition extends ConditionFundamentals implements SparqlConditionIn
   }
 
   /**
-   * Compiles a filter exists (or not exists) condition.
+   * Compiles a filter exists condition.
+   *
+   * Since a triple in SPARQL works just like EXISTS does, for EXISTS we add
+   * any condition missing from the field mapping fragments.
    *
    * @param array $condition
    *   An array that contains the 'field', 'value', 'operator' values.
    */
   protected function compileExists(array $condition): void {
-    $prefix = self::$filterOperatorMap[$condition['operator']]['prefix'];
-    $suffix = self::$filterOperatorMap[$condition['operator']]['suffix'];
-
     $field_predicate = $this->fieldMappings[$condition['field']];
-    $condition_string = self::ID_KEY . ' ' . $this->escapePredicate($field_predicate) . ' ' . SparqlArg::toVar($condition['field']);
+    $condition_strings = [];
+    $condition_strings[] = self::ID_KEY . ' ' . $this->escapePredicate($field_predicate) . ' ' . SparqlArg::toVar($condition['field']);
 
     if (isset($this->fieldMappingConditions[$condition['field']])) {
       $mapping_condition = $this->fieldMappingConditions[$condition['field']];
       $mapping_condition['value'] = SparqlArg::toResourceUris($mapping_condition['value']);
       $mapping_condition['field'] = $field_predicate;
-      $condition_string .= ' . ' . $this->compileValuesFilter($mapping_condition);
+      $condition_strings[] = $this->compileValuesFilter($mapping_condition);
     }
 
-    $key = array_search($condition_string, $this->conditionFragments);
-    // Only add a condition if the mapping condition is not found. If found,
-    // replace it, in order to avoid creating an EXISTS and NOT EXISTS on the
-    // same property.
-    if ($key !== FALSE) {
-      $this->conditionFragments[$key] = $prefix . $this->conditionFragments[$key] . $suffix;
+    foreach ($condition_strings as $condition_string) {
+      if (array_search($condition_string, $this->conditionFragments) === FALSE) {
+        $this->addConditionFragment($condition_string);
+      }
     }
-    else {
-      $this->addConditionFragment($prefix . $condition_string . $suffix);
+  }
+
+  /**
+   * Compiles a filter not exists condition.
+   *
+   * @param array $condition
+   *   An array that contains the 'field', 'value', 'operator' values.
+   */
+  protected function compileNotExists(array $condition): void {
+    $prefix = self::$filterOperatorMap[$condition['operator']]['prefix'];
+    $suffix = self::$filterOperatorMap[$condition['operator']]['suffix'];
+
+    $field_predicate = $this->fieldMappings[$condition['field']];
+    $condition_strings = [];
+    $condition_strings[] = self::ID_KEY . ' ' . $this->escapePredicate($field_predicate) . ' ' . SparqlArg::toVar($condition['field']);
+
+    if (isset($this->fieldMappingConditions[$condition['field']])) {
+      $mapping_condition = $this->fieldMappingConditions[$condition['field']];
+      $mapping_condition['value'] = SparqlArg::toResourceUris($mapping_condition['value']);
+      $mapping_condition['field'] = $field_predicate;
+      $condition_strings[] = $this->compileValuesFilter($mapping_condition);
     }
+
+    foreach ($condition_strings as $condition_string) {
+      $key = array_search($condition_string, $this->conditionFragments);
+      // Since field mapping conditions act also as EXISTS (the triple patterns
+      // MUST exist), remove any pattern added in the mapping conditions so that
+      // only the negative condition below exists.
+      if ($key !== FALSE) {
+        unset($this->conditionFragments[$key]);
+      }
+    }
+
+    $this->addConditionFragment($prefix . implode(' . ', $condition_strings) . $suffix);
+
   }
 
   /**
