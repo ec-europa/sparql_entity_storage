@@ -271,6 +271,10 @@ class SparqlCondition extends ConditionFundamentals implements SparqlConditionIn
           'lang' => $lang,
           'column' => $column,
         ];
+
+        if ($operator !== 'NOT EXISTS') {
+          $this->requiresDefaultPattern = FALSE;
+        }
     }
 
     return $this;
