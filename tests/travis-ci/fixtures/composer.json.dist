@@ -20,10 +20,6 @@
   "prefer-stable": true,
   "repositories": [
     {
-      "type": "path",
-      "url": "${TRAVIS_BUILD_DIR}"
-    },
-    {
       "type": "package",
       "package": {
         "name": "minimaxir/big-list-of-naughty-strings",
