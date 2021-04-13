@@ -25,7 +25,7 @@ env:
     - TEST=PHPUnit DRUPAL=~8.9.0 PHPUNIT=^7
     - TEST=PHPUnit DRUPAL=~9.0.0 PHPUNIT=^8
     - TEST=PHPUnit DRUPAL=~9.1.0 PHPUNIT=^8
-    - TEST=PHPUnit DRUPAL=~9.2.0 PHPUNIT=^8
+    - TEST=PHPUnit DRUPAL=~9.2.0 PHPUNIT=^9
 
 matrix:
   fast_finish: true
@@ -35,7 +35,7 @@ matrix:
     - php: '7.2'
       env: TEST=PHPUnit DRUPAL=~9.1.0 PHPUNIT=^8
     - php: '7.2'
-      env: TEST=PHPUnit DRUPAL=~9.2.0 PHPUNIT=^8
+      env: TEST=PHPUnit DRUPAL=~9.2.0 PHPUNIT=^9
     - php: '7.3'
       env: TEST=PHPCodeSniffer
     - php: '7.3'
