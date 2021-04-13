@@ -10,7 +10,7 @@ install_codebase () {
 
 case "${TEST}" in
     PHPCodeSniffer)
-        cd "${TRAVIS_BUILD_DIR}" || exit
+        cd "${TRAVIS_BUILD_DIR}"
         composer install
         ./vendor/bin/phpcs
         exit $?
@@ -40,7 +40,7 @@ case "${TEST}" in
         sleep 15
 
         # Run PHPUnit.
-        cd "${SITE_DIR}" || exit
+        cd "${SITE_DIR}"
         ./vendor/bin/phpunit --verbose
         exit $?
         ;;
