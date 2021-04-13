@@ -17,8 +17,8 @@
   "require-dev": {
     "composer/installers": "^1.7",
     "drupal/coder": "^8.3",
+    "drupal/core": "^8.9 || ^9.1",
     "drupal/core-composer-scaffold": "^8.9 || ^9.1",
-    "drupal/core-recommended": "^8.9 || ^9.1",
     "mglaman/phpstan-drupal": "^0.12.9",
     "mikey179/vfsstream": "^1.6",
     "minimaxir/big-list-of-naughty-strings": "dev-master",
