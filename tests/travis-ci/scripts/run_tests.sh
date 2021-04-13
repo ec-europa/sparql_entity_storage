@@ -3,7 +3,7 @@
 install_codebase () {
     mkdir -p "${SITE_DIR}/modules"
     ln -s "${TRAVIS_BUILD_DIR}" "${SITE_DIR}/modules/sparql_entity_storage"
-    composer require --dev drupal/core-recommended:${DRUPAL} drupal/core-composer-scaffold:${DRUPAL} phpunit/phpunit:${PHPUNIT} --no-interaction --prefer-dist
+    composer require --dev drupal/core:${DRUPAL} drupal/core-composer-scaffold:${DRUPAL} phpunit/phpunit:${PHPUNIT} --no-interaction --prefer-dist
 }
 
 set -x
