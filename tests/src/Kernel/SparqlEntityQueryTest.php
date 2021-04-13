@@ -465,7 +465,8 @@ class SparqlEntityQueryTest extends SparqlKernelTestBase {
       ->notExists('text')
       ->execute();
 
-    $this->assertNotEmpty($results);
+    $this->assertCount(1, $results);
+    $this->assertContains('http://fruit.example.com/not_exists', $results);
   }
 
   /**
