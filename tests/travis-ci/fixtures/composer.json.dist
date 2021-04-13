@@ -11,7 +11,7 @@
     "mikey179/vfsstream": "~1.2",
     "minimaxir/big-list-of-naughty-strings": "dev-master",
     "mglaman/phpstan-drupal": "^0.12.6",
-    "phpspec/prophecy": "^1.7",
+    "phpspec/prophecy-phpunit": "^1.0 || ^2.0",
     "phpstan/phpstan-deprecation-rules": "^0.12.5",
     "phpunit/phpunit": "${PHPUNIT}",
     "symfony/phpunit-bridge": "^5.1.4"
