@@ -71,7 +71,7 @@ $databases['sparql_default']['sparql'] = [
   'prefix' => '',
   'host' => '127.0.0.1',
   'port' => '8890',
-  'namespace' => 'Drupal\\Driver\\Database\\sparql',
+  'namespace' => 'Drupal\\sparql_entity_storage\\Driver\\Database\\sparql',
   'driver' => 'sparql',
   // Optional. This is actually the endpoint path. If omitted, 'sparql' will
   // be used.
