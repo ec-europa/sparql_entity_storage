@@ -144,7 +144,7 @@ class Connection implements ConnectionInterface {
     }
     catch (EasyRdfException $exception) {
       // Re-throw the exception, but with the query as message.
-      throw new SparqlQueryException('Execution of query failed: ' . $query);
+      throw new SparqlQueryException("Execution of query failed with message '{$exception->getBody()}'. Query: " . $query, $exception->getCode(), $exception);
     }
 
     if ($this->logger) {
@@ -176,7 +176,7 @@ class Connection implements ConnectionInterface {
     }
     catch (EasyRdfException $exception) {
       // Re-throw the exception, but with the query as message.
-      throw new SparqlQueryException('Execution of query failed: ' . $query);
+      throw new SparqlQueryException("Execution of query failed with message '{$exception->getBody()}'. Query: " . $query, $exception->getCode(), $exception);
     }
 
     if ($this->logger) {
