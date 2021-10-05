@@ -147,9 +147,9 @@ class SparqlEntityStorageGraphHandler implements SparqlEntityStorageGraphHandler
       if ($entity_type->hasKey('bundle') && ($bundle_entity_id = $entity_type->getBundleEntityType())) {
         $bundle_keys = array_values($this->entityTypeManager->getStorage($bundle_entity_id)->getQuery()->execute());
       }
-      else {
-        $bundle_keys = [$entity_type_id];
-      }
+
+      // Bundleless entity types use the entity type ID as the bundle ID.
+      $bundle_keys = !empty($bundle_keys) ? $bundle_keys : [$entity_type_id];
 
       foreach ($bundle_keys as $bundle_key) {
         $graphs = ($mapping = SparqlMapping::loadByName($entity_type_id, $bundle_key)) ? $mapping->getGraphs() : [];
