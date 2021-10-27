@@ -161,7 +161,7 @@ class SparqlGraph extends ConfigEntityBase implements SparqlGraphInterface {
    * {@inheritdoc}
    */
   public function delete() {
-    if (!$this->isUninstalling() && ($this->id() === static::DEFAULT)) {
+    if (!$this->isSyncing() && !$this->isUninstalling() && ($this->id() === static::DEFAULT)) {
       throw new \RuntimeException("The '" . static::DEFAULT . "' graph cannot be deleted.");
     }
     parent::delete();
