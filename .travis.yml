@@ -13,28 +13,26 @@ mysql:
 
 jobs:
   include:
-    # PHP 7.4
+
     - name: 'PHPCodeSniffer'
       php: 7.4
       env: TEST_SUITE=PHPCodeSniffer
 
     - name: 'PHPStan'
       php: 7.4
-      env: TEST_SUITE=PHPStan DRUPAL=~8.9.0 PHPUNIT=^7
-
-    # PHP 7.4
-    - name: 'PHPUnit with Drupal 8 on PHP 7.4'
-      php: 7.4
-      env: TEST_SUITE=PHPUnit DRUPAL=^8.9 PHPUNIT=^7
+      env: TEST_SUITE=PHPStan DRUPAL=^9.2 PHPUNIT=^9
 
     - name: 'PHPUnit with Drupal 9 on PHP 7.4'
       php: 7.4
-      env: TEST_SUITE=PHPUnit DRUPAL=^9.1 PHPUNIT=^9
+      env: TEST_SUITE=PHPUnit DRUPAL=^9.2 PHPUNIT=^9
 
-    # PHP 8
+    - name: 'PHPUnit with Drupal 9 on PHP 8.0'
+      php: 8.0
+      env: TEST_SUITE=PHPUnit DRUPAL=^9.2 PHPUNIT=^9
+
     - name: 'PHPUnit with Drupal 9 on PHP 8 nightly'
       php: nightly
-      env: TEST_SUITE=PHPUnit DRUPAL=^9.1 PHPUNIT=^9
+      env: TEST_SUITE=PHPUnit DRUPAL=^9.2 PHPUNIT=^9
 
 cache:
   directories:
