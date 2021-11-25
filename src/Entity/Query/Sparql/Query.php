@@ -404,7 +404,7 @@ class Query extends QueryBase implements SparqlQueryInterface {
    */
   protected function conditionGroupFactory($conjunction = 'AND') {
     $class = static::getClass($this->namespaces, 'SparqlCondition');
-    return new $class($conjunction, $this, $this->namespaces, $this->graphHandler, $this->fieldHandler, $this->languageManager);
+    return new $class($conjunction, $this, $this->namespaces, $this->fieldHandler, $this->languageManager);
   }
 
   /**
