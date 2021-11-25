@@ -1,7 +1,7 @@
 parameters:
     customRulesetUsed: true
     reportUnmatchedIgnoredErrors: false
-    excludes_analyse:
+    excludePaths:
         - ../testing_site/modules/sparql_entity_storage/vendor
 includes:
     - vendor/mglaman/phpstan-drupal/extension.neon
