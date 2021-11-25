@@ -20,7 +20,7 @@ jobs:
 
     - name: 'PHPStan'
       php: 7.4
-      env: TEST_SUITE=PHPStan DRUPAL=^9.2 PHPUNIT=^9
+      env: TEST_SUITE=PHPStan DRUPAL=~8.9.20 PHPUNIT=^7
 
     - name: 'PHPUnit with Drupal 9 on PHP 7.4'
       php: 7.4
