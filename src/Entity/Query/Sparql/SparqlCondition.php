@@ -9,20 +9,12 @@ use Drupal\Core\Entity\Query\ConditionInterface;
 use Drupal\Core\Language\LanguageInterface;
 use Drupal\Core\Language\LanguageManagerInterface;
 use Drupal\sparql_entity_storage\SparqlEntityStorageFieldHandlerInterface;
-use Drupal\sparql_entity_storage\SparqlEntityStorageGraphHandlerInterface;
 use EasyRdf\Serialiser\Ntriples;
 
 /**
  * Defines the condition class for the entity query.
  */
 class SparqlCondition extends ConditionFundamentals implements SparqlConditionInterface {
-
-  /**
-   * The SPARQL graph handler service.
-   *
-   * @var \Drupal\sparql_entity_storage\SparqlEntityStorageGraphHandlerInterface
-   */
-  protected $graphHandler;
 
   /**
    * The SPARQL field mapping handler service.
@@ -152,7 +144,7 @@ class SparqlCondition extends ConditionFundamentals implements SparqlConditionIn
    *
    * @var array
    */
-  protected $fieldMappingConditions;
+  protected $fieldMappingConditions = [];
 
   /**
    * The entity type ID key.
@@ -194,25 +186,20 @@ class SparqlCondition extends ConditionFundamentals implements SparqlConditionIn
    *   The entity query this condition belongs to.
    * @param array $namespaces
    *   List of potential namespaces of the classes belonging to this condition.
-   * @param \Drupal\sparql_entity_storage\SparqlEntityStorageGraphHandlerInterface $sparql_graph_handler
-   *   The SPARQL graph handler service.
    * @param \Drupal\sparql_entity_storage\SparqlEntityStorageFieldHandlerInterface $sparql_field_handler
    *   The SPARQL field mapping handler service.
    * @param \Drupal\Core\Language\LanguageManagerInterface $language_manager
    *   The language manager service.
    */
-  public function __construct($conjunction, SparqlQueryInterface $query, array $namespaces, SparqlEntityStorageGraphHandlerInterface $sparql_graph_handler, SparqlEntityStorageFieldHandlerInterface $sparql_field_handler, LanguageManagerInterface $language_manager) {
+  public function __construct($conjunction, SparqlQueryInterface $query, array $namespaces, SparqlEntityStorageFieldHandlerInterface $sparql_field_handler, LanguageManagerInterface $language_manager) {
     $conjunction = strtoupper($conjunction);
     parent::__construct($conjunction, $query, $namespaces);
-    $this->graphHandler = $sparql_graph_handler;
     $this->fieldHandler = $sparql_field_handler;
     $this->languageManager = $language_manager;
     $this->typePredicate = $query->getEntityStorage()->getBundlePredicates();
     $this->bundleKey = $query->getEntityType()->getKey('bundle');
     $this->idKey = $query->getEntityType()->getKey('id');
     $this->labelKey = $query->getEntityType()->getKey('label');
-    // Initialize variable to avoid warnings;.
-    $this->fieldMappingConditions = [];
     $this->fieldMappings = [
       $this->idKey => self::ID_KEY,
       $this->bundleKey => count($this->typePredicate) === 1 ? reset($this->typePredicate) : SparqlArg::toVar($this->bundleKey . '_predicate'),
@@ -263,7 +250,18 @@ class SparqlCondition extends ConditionFundamentals implements SparqlConditionIn
         if (!$this->fieldHandler->fieldIsMapped($this->query->getEntityTypeId(), $field)) {
           return $this;
         }
-        $column = isset($field_name_parts[1]) ? $field_name_parts[1] : $this->fieldHandler->getFieldMainProperty($this->query->getEntityTypeId(), $field);
+
+        if (isset($field_name_parts[1])) {
+          // The 'entity' column designates an entity reference.
+          // @see \Drupal\Core\Entity\Query\QueryInterface::condition()
+          // @todo Handle more complex column representations, such as
+          //   'tags.entity.name' or tags.entity:taxonomy_term.name'.
+          $column = $field_name_parts[1] === 'entity' ? 'target_id' : $field_name_parts[1];
+        }
+        else {
+          $column = $this->fieldHandler->getFieldMainProperty($this->query->getEntityTypeId(), $field);
+        }
+
         $this->conditions[] = [
           'field' => $field,
           'value' => $value,

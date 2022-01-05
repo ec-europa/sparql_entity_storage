@@ -71,6 +71,17 @@ class SparqlEntityQueryTest extends SparqlKernelTestBase {
   }
 
   /**
+   * Tests that the case field_ref.entity is handled.
+   */
+  public function testEntityColumns(): void {
+    $ids = array_keys($this->getQuery()->condition('reference.entity', $this->entities[1]->id())->execute());
+    $this->assertSame([
+      'http://vegetable.example.com/004',
+      'http://vegetable.example.com/009',
+    ], $ids);
+  }
+
+  /**
    * Tests basic functionality related to Id and bundle filtering.
    */
   public function testIdBundleFilters() {
@@ -635,7 +646,8 @@ class SparqlEntityQueryTest extends SparqlKernelTestBase {
   protected function getQuery(string $operator = 'AND'): SparqlQueryInterface {
     return $this->container->get('entity_type.manager')
       ->getStorage('sparql_test')
-      ->getQuery($operator);
+      ->getQuery($operator)
+      ->accessCheck(FALSE);
   }
 
 }
