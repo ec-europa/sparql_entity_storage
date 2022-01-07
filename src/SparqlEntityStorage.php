@@ -269,8 +269,15 @@ class SparqlEntityStorage extends ContentEntityStorageBase implements SparqlEnti
               }
             }
           }
-          $entity_class = $this->getEntityClass($bundle);
-          $entity = new $entity_class($entity_values, $this->entityTypeId, $bundle, $translations);
+          if (method_exists($this, 'getEntityClass')) {
+            $entity_class = $this->getEntityClass($bundle);
+            $entity = new $entity_class($entity_values, $this->entityTypeId, $bundle, $translations);
+          }
+          else {
+            // Compatibility layer for Drupal 9.2 and below.
+            @trigger_error('Using Sparql Entity Storage on a Drupal installation without support for bundle classes is deprecated in sparql_entity_storage:1.0-alpha11 and is removed from sparql_entity_storage:1.0. See https://www.drupal.org/project/sparql_entity_storage/issues/3257447', E_USER_DEPRECATED);
+            $entity = new $this->entityClass($entity_values, $this->entityTypeId, $bundle, $translations);
+          }
           $this->trackOriginalGraph($entity);
           $entities[$id] = $entity;
         }
@@ -710,7 +717,14 @@ QUERY;
       $keyed_entities[$entity->id()] = $entity;
     }
 
-    $entity_classes = $this->getEntityClasses($keyed_entities);
+    if (method_exists($this, 'getEntityClass')) {
+      $entity_classes = $this->getEntityClasses($keyed_entities);
+    }
+    else {
+      // Compatibility layer for Drupal 9.2 and below.
+      @trigger_error('Using Sparql Entity Storage on a Drupal installation without support for bundle classes is deprecated in sparql_entity_storage:1.0-alpha11 and is removed from sparql_entity_storage:1.0. See https://www.drupal.org/project/sparql_entity_storage/issues/3257447', E_USER_DEPRECATED);
+      $entity_classes = [$this->entityClass];
+    }
 
     // Allow code to run before deleting.
     foreach ($entity_classes as $entity_class => &$items) {
