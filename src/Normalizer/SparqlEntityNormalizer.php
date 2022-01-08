@@ -6,8 +6,8 @@ namespace Drupal\sparql_entity_storage\Normalizer;
 
 use Drupal\Core\Entity\ContentEntityInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
-use Drupal\sparql_entity_storage\SparqlSerializer;
 use Drupal\sparql_entity_storage\SparqlEntityStorageInterface;
+use Drupal\sparql_entity_storage\SparqlSerializer;
 
 /**
  * Converts the Drupal entity object structure to a HAL array structure.
@@ -62,7 +62,9 @@ class SparqlEntityNormalizer extends NormalizerBase {
    */
   public function normalize($entity, $format = NULL, array $context = []): array {
     $format = $format ?: 'turtle';
-    return ['_sparql_entity' => $this->sparqlSerializer->serializeEntity($entity, $format)];
+    return [
+      '_sparql_entity' => $this->sparqlSerializer->serializeEntity($entity, $format),
+    ];
   }
 
 }

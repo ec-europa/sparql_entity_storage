@@ -71,6 +71,17 @@ class SparqlEntityQueryTest extends SparqlKernelTestBase {
   }
 
   /**
+   * Tests that the case field_ref.entity is handled.
+   */
+  public function testEntityColumns(): void {
+    $ids = array_keys($this->getQuery()->condition('reference.entity', $this->entities[1]->id())->execute());
+    $this->assertSame([
+      'http://vegetable.example.com/004',
+      'http://vegetable.example.com/009',
+    ], $ids);
+  }
+
+  /**
    * Tests basic functionality related to Id and bundle filtering.
    */
   public function testIdBundleFilters() {
@@ -309,6 +320,78 @@ class SparqlEntityQueryTest extends SparqlKernelTestBase {
   }
 
   /**
+   * Tests sorting and order mechanisms.
+   */
+  public function testSortOrder() {
+    // Sort without direction. Defaults to ASC.
+    $this->results = $this->getQuery()
+      ->condition('type', 'fruit')
+      ->sort('text')
+      ->execute();
+    $this->assertResult('http://fruit.example.com/001', 'http://fruit.example.com/003', 'http://fruit.example.com/005', 'http://fruit.example.com/007', 'http://fruit.example.com/009', 'http://fruit.example.com/002', 'http://fruit.example.com/004', 'http://fruit.example.com/006', 'http://fruit.example.com/008', 'http://fruit.example.com/010');
+
+    // Sort by ascending direction.
+    $this->results = $this->getQuery()
+      ->condition('type', 'fruit')
+      ->sort('text', 'ASC')
+      ->execute();
+    $this->assertResult('http://fruit.example.com/001', 'http://fruit.example.com/003', 'http://fruit.example.com/005', 'http://fruit.example.com/007', 'http://fruit.example.com/009', 'http://fruit.example.com/002', 'http://fruit.example.com/004', 'http://fruit.example.com/006', 'http://fruit.example.com/008', 'http://fruit.example.com/010');
+
+    // Sort by descending direction.
+    $this->results = $this->getQuery()
+      ->condition('type', 'fruit')
+      ->sort('text', 'DESC')
+      ->execute();
+    $this->assertResult('http://fruit.example.com/002', 'http://fruit.example.com/004', 'http://fruit.example.com/006', 'http://fruit.example.com/008', 'http://fruit.example.com/010', 'http://fruit.example.com/001', 'http://fruit.example.com/003', 'http://fruit.example.com/005', 'http://fruit.example.com/007', 'http://fruit.example.com/009');
+
+    // Test multiple property ordering.
+    $this->results = $this->getQuery()
+      ->condition('type', 'fruit')
+      ->sort('text', 'DESC')
+      ->sort('id', 'DESC')
+      ->execute();
+    $this->assertResult('http://fruit.example.com/010', 'http://fruit.example.com/008', 'http://fruit.example.com/006', 'http://fruit.example.com/004', 'http://fruit.example.com/002', 'http://fruit.example.com/009', 'http://fruit.example.com/007', 'http://fruit.example.com/005', 'http://fruit.example.com/003', 'http://fruit.example.com/001');
+
+    $this->results = $this->getQuery()
+      ->condition('type', 'fruit')
+      ->sort('text')
+      ->sort('id', 'DESC')
+      ->execute();
+    $this->assertResult('http://fruit.example.com/009', 'http://fruit.example.com/007', 'http://fruit.example.com/005', 'http://fruit.example.com/003', 'http://fruit.example.com/001', 'http://fruit.example.com/010', 'http://fruit.example.com/008', 'http://fruit.example.com/006', 'http://fruit.example.com/004', 'http://fruit.example.com/002');
+
+    // Test the bundle key as it is a separate special case along with the id.
+    $sub_query = $this->getQuery()->orConditionGroup();
+    $sub_query
+      ->condition('id', 'http://fruit.example.com/009')
+      ->condition('id', 'http://vegetable.example.com/003');
+
+    $this->results = $this->getQuery()
+      ->condition($sub_query)
+      ->sort('type')
+      ->execute();
+    $this->assertResult('http://fruit.example.com/009', 'http://vegetable.example.com/003');
+
+    $this->results = $this->getQuery()
+      ->condition($sub_query)
+      ->sort('type', 'DESC')
+      ->execute();
+    $this->assertResult('http://vegetable.example.com/003', 'http://fruit.example.com/009');
+
+    // Test sorting using an OR query. Assert that mapping conditions are placed
+    // individually.
+    $this->results = $this->getQuery('OR')
+      ->condition($sub_query)
+      ->sort('type', 'DESC')
+      ->execute();
+    $this->assertResult('http://vegetable.example.com/003', 'http://fruit.example.com/009');
+
+    // Invalid directions are not allowed.
+    $this->expectException(\RuntimeException::class);
+    $this->expectExceptionMessage('Only "ASC" and "DESC" are allowed as sort order.');
+    $this->results = $this->getQuery()->sort('id', 'SOME_INVALID_DIRECTION');
+  }
+
+  /**
    * Tests operators '<', '>', '<=', '>=' for Ids.
    *
    * @dataProvider idStringComparisonDataProvider
@@ -377,6 +460,27 @@ class SparqlEntityQueryTest extends SparqlKernelTestBase {
   }
 
   /**
+   * Tests the NOT EXISTS operator.
+   */
+  public function testNotExists() {
+    $entity = SparqlTest::create([
+      'id' => 'http://fruit.example.com/not_exists',
+      'title' => 'fruit title not exists',
+      'type' => 'fruit',
+    ]);
+    $entity->save();
+    $this->entities[] = $entity;
+
+    $results = $this->getQuery()
+      ->condition('type', 'fruit')
+      ->notExists('text')
+      ->execute();
+
+    $this->assertCount(1, $results);
+    $this->assertContains('http://fruit.example.com/not_exists', $results);
+  }
+
+  /**
    * Asserts that arrays are identical.
    */
   protected function assertResult() {
@@ -398,7 +502,7 @@ class SparqlEntityQueryTest extends SparqlKernelTestBase {
    *   An array of entity values.
    */
   protected function getTestEntityValues() {
-    $time = \Drupal::time()->getRequestTime();
+    $time = $this->container->get('datetime.time')->getRequestTime();
     $return = [];
     // Entity 001.
     $return[] = [
@@ -542,7 +646,8 @@ class SparqlEntityQueryTest extends SparqlKernelTestBase {
   protected function getQuery(string $operator = 'AND'): SparqlQueryInterface {
     return $this->container->get('entity_type.manager')
       ->getStorage('sparql_test')
-      ->getQuery($operator);
+      ->getQuery($operator)
+      ->accessCheck(FALSE);
   }
 
 }

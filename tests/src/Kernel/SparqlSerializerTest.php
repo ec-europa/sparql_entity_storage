@@ -38,7 +38,10 @@ class SparqlSerializerTest extends KernelTestBase {
    */
   protected function setUp(): void {
     parent::setUp();
-    $this->installConfig(['sparql_entity_storage', 'sparql_serialization_test']);
+    $this->installConfig([
+      'sparql_entity_storage',
+      'sparql_serialization_test',
+    ]);
   }
 
   /**

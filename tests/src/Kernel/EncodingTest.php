@@ -22,8 +22,12 @@ class EncodingTest extends SparqlKernelTestBase {
       // Retry with the vendor directory in the Drupal root.
       $path = DRUPAL_ROOT . "/vendor/minimaxir/big-list-of-naughty-strings/blns.json";
       if (!file_exists($path)) {
-        $this->markTestSkipped('Library minimaxir/big-list-of-naughty-strings is required.');
-        return;
+        // Retry with the module's vendor directory.
+        $path = __DIR__ . "/../../../vendor/minimaxir/big-list-of-naughty-strings/blns.json";
+        if (!file_exists($path)) {
+          $this->markTestSkipped('Library minimaxir/big-list-of-naughty-strings is required.');
+          return;
+        }
       }
     }
     $json = file_get_contents($path);
@@ -48,14 +52,14 @@ class EncodingTest extends SparqlKernelTestBase {
         $this->assertTrue(FALSE, $msg);
       }
 
-      $query = \Drupal::entityQuery('sparql_test')
+      $result = $this->container->get('entity_type.manager')
+        ->getStorage('sparql_test')
+        ->getQuery()
         ->condition('title', 'Berry')
         ->condition('type', 'fruit')
-        ->range(0, 1);
-
-      $result = $query->execute();
-      $msg = sprintf("Loaded naughty object '%s'.", $naughty_string);
-      $this->assertFalse(empty($result), $msg);
+        ->range(0, 1)
+        ->execute();
+      $this->assertNotEmpty($result);
 
       $loaded_rdf = NULL;
       try {
@@ -64,20 +68,16 @@ class EncodingTest extends SparqlKernelTestBase {
       catch (\Exception $e) {
         fwrite(STDOUT, $e->getMessage() . "\n");
         fwrite(STDOUT, $e->getTraceAsString() . "\n");
-        $msg = sprintf("Entity loaded for naughty string '%s'.", $naughty_string);
-        $this->assertTrue(FALSE, $msg);
+        $this->assertTrue(FALSE);
       }
 
       $field = $loaded_rdf->get('text');
-      $msg = sprintf("Field was empty for naughty string '%s'.", $naughty_string);
-      $this->assertTrue($field, $msg);
+      $this->assertNotEmpty($field);
       $first = $field->first();
-      $msg = sprintf("First value set for naughty string '%s'.", $naughty_string);
-      $this->assertTrue($first, $msg);
+      $this->assertNotEmpty($first);
       $text = $first->getValue();
 
-      $msg = sprintf("Naughty string '%s' was correctly read back.", $naughty_string);
-      $this->assertEquals($text['value'], $naughty_string, $msg);
+      $this->assertSame($naughty_string, $text['value']);
       $rdf->delete();
     }
   }

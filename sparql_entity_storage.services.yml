@@ -1,26 +1,16 @@
 services:
   entity.query.sparql:
     class: Drupal\sparql_entity_storage\Entity\Query\Sparql\QueryFactory
-    arguments: ['@sparql.endpoint', '@entity_type.manager', '@sparql.graph_handler', '@sparql.field_handler']
+    arguments: ['@sparql.endpoint', '@entity_type.manager', '@sparql.graph_handler', '@sparql.field_handler', '@module_handler', '@language_manager']
     tags:
     - { name: backend_overridable }
   sparql.endpoint:
-    class: Drupal\Driver\Database\sparql\Connection
+    class: Drupal\sparql_entity_storage\Driver\Database\sparql\Connection
     factory: ['Drupal\Core\Database\Database', getConnection]
     arguments: [default, sparql_default]
-# @todo: Move the webprofiler integration into a submodule.
-#  webprofiler.sparql:
-#    class: \Drupal\sparql_entity_storage\DataCollector\SparqlDataCollector
-#    arguments: ['@sparql.endpoint', '@config.factory']
-#    tags:
-#      - name: data_collector
-#        template: "@rdf_entity/Collector/sparql.html.twig"
-#        id: sparql
-#        title: Sparql
-#        priority: 60
   sparql.paramconverter:
     class: Drupal\sparql_entity_storage\ParamConverter\SparqlEntityStorageConverter
-    arguments: ['@entity.manager']
+    arguments: ['@entity_type.manager', '@entity.repository', '@event_dispatcher']
     tags:
     # Use a higher priority than EntityConverter.
     - { name: paramconverter, priority: 6 }

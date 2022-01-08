@@ -5,7 +5,7 @@ declare(strict_types = 1);
 namespace Drupal\sparql_entity_storage;
 
 use Drupal\Core\Entity\ContentEntityInterface;
-use Drupal\sparql_entity_storage\Database\Driver\sparql\ConnectionInterface;
+use Drupal\sparql_entity_storage\Driver\Database\sparql\ConnectionInterface;
 use EasyRdf\Graph;
 
 /**
@@ -16,7 +16,7 @@ class SparqlSerializer implements SparqlSerializerInterface {
   /**
    * The SPARQL connection object.
    *
-   * @var \Drupal\sparql_entity_storage\Database\Driver\sparql\ConnectionInterface
+   * @var \Drupal\sparql_entity_storage\Driver\Database\sparql\ConnectionInterface
    */
   protected $sparqlEndpoint;
 
@@ -30,7 +30,7 @@ class SparqlSerializer implements SparqlSerializerInterface {
   /**
    * Instantiates a new serializer instance.
    *
-   * @param \Drupal\sparql_entity_storage\Database\Driver\sparql\ConnectionInterface $sparqlEndpoint
+   * @param \Drupal\sparql_entity_storage\Driver\Database\sparql\ConnectionInterface $sparqlEndpoint
    *   The SPARQL connection object.
    * @param \Drupal\sparql_entity_storage\SparqlEntityStorageGraphHandlerInterface $graph_handler
    *   The SPARQL graph handler service.
@@ -43,12 +43,12 @@ class SparqlSerializer implements SparqlSerializerInterface {
   /**
    * {@inheritdoc}
    */
-  public function serializeEntity(ContentEntityInterface $entity, string $format = 'turtle'): string {
+  public function serializeEntity(ContentEntityInterface $entity, string $format = 'turtle', array $options = []): string {
     $graph_uri = $this->graphHandler->getBundleGraphUri($entity->getEntityTypeId(), $entity->bundle(), $entity->graph->target_id);
     $entity_id = $entity->id();
 
     $query = <<<Query
-SELECT ?s ?p ?o 
+SELECT ?s ?p ?o
 WHERE {
   {
     GRAPH <{$graph_uri}> {
@@ -71,7 +71,7 @@ Query;
     foreach ($results as $result) {
       $graph->add($result->s, $result->p, $result->o);
     }
-    return $graph->serialise($format);
+    return $graph->serialise($format, $options);
   }
 
 }

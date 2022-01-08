@@ -19,7 +19,7 @@ use Drupal\Core\Extension\ModuleHandlerInterface;
 use Drupal\Core\Field\FieldDefinitionInterface;
 use Drupal\Core\Language\LanguageInterface;
 use Drupal\Core\Language\LanguageManagerInterface;
-use Drupal\sparql_entity_storage\Database\Driver\sparql\ConnectionInterface;
+use Drupal\sparql_entity_storage\Driver\Database\sparql\ConnectionInterface;
 use Drupal\sparql_entity_storage\Entity\Query\Sparql\SparqlArg;
 use Drupal\sparql_entity_storage\Entity\SparqlGraph;
 use Drupal\sparql_entity_storage\Exception\DuplicatedIdException;
@@ -49,7 +49,7 @@ class SparqlEntityStorage extends ContentEntityStorageBase implements SparqlEnti
   /**
    * Sparql database connection.
    *
-   * @var \Drupal\sparql_entity_storage\Database\Driver\sparql\ConnectionInterface
+   * @var \Drupal\sparql_entity_storage\Driver\Database\sparql\ConnectionInterface
    */
   protected $sparql;
 
@@ -108,7 +108,7 @@ class SparqlEntityStorage extends ContentEntityStorageBase implements SparqlEnti
    *   The memory cache backend.
    * @param \Drupal\Core\Entity\EntityTypeBundleInfoInterface $entity_type_bundle_info
    *   The entity type bundle info.
-   * @param \Drupal\sparql_entity_storage\Database\Driver\sparql\ConnectionInterface $sparql
+   * @param \Drupal\sparql_entity_storage\Driver\Database\sparql\ConnectionInterface $sparql
    *   The connection object.
    * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entity_type_manager
    *   The entity type manager service.
@@ -263,7 +263,7 @@ class SparqlEntityStorage extends ContentEntityStorageBase implements SparqlEnti
           $langcode_key = $this->getEntityType()->getKey('langcode');
           $translations = [];
           if (!empty($entities_values[$id][$langcode_key])) {
-            foreach ($entities_values[$id][$langcode_key] as $langcode => $data) {
+            foreach ($entities_values[$id][$langcode_key] as $data) {
               if (!empty(reset($data)['value'])) {
                 $translations[] = reset($data)['value'];
               }
@@ -310,7 +310,7 @@ class SparqlEntityStorage extends ContentEntityStorageBase implements SparqlEnti
       return [];
     }
 
-    // @todo: We should filter per entity per graph and not load the whole
+    // @todo We should filter per entity per graph and not load the whole
     // database only to filter later on.
     // @see https://github.com/ec-europa/sparql_entity_storage/issues/2
     $ids_string = SparqlArg::serializeUris($ids, ' ');
@@ -405,7 +405,6 @@ QUERY;
           $return[$entity_id][$this->idKey][LanguageInterface::LANGCODE_DEFAULT] = $entity_id;
           $return[$entity_id]['graph'][LanguageInterface::LANGCODE_DEFAULT] = $graph_id;
 
-          $rdf_type = NULL;
           foreach ($entity_values as $predicate => $field) {
             $field_name = isset($inbound_map['fields'][$predicate][$bundle]['field_name']) ? $inbound_map['fields'][$predicate][$bundle]['field_name'] : NULL;
             if (empty($field_name)) {
@@ -651,8 +650,6 @@ QUERY;
    * {@inheritdoc}
    */
   public function loadRevision($revision_id) {
-    list($entity_id, $graph) = explode('||', $revision_id);
-
     return NULL;
   }
 
@@ -739,7 +736,7 @@ QUERY;
       // Determine all possible graphs for the entity.
       $graphs_by_bundle = $this->getGraphHandler()->getEntityTypeGraphUris($this->getEntityTypeId());
       $graphs = $graphs_by_bundle[$keyed_entity->bundle()];
-      foreach ($graphs as $graph_name => $graph_uri) {
+      foreach ($graphs as $graph_uri) {
         $entities_by_graph[$graph_uri][$keyed_entity->id()] = $keyed_entity;
       }
     }
@@ -877,7 +874,7 @@ QUERY;
     $lang_array = $this->toLangArray($entity);
     foreach ($lang_array as $field_name => $langcode_data) {
       foreach ($langcode_data as $langcode => $field_item) {
-        foreach ($field_item as $delta => $column_data) {
+        foreach ($field_item as $column_data) {
           foreach ($column_data as $column => $value) {
             // Filter out empty values or non mapped fields. The id is also
             // excluded as it is not mapped.
@@ -1107,7 +1104,7 @@ QUERY;
    * @param array $values
    *   The field values.
    *
-   * @todo: To be removed when columns will be supported. No need to manually
+   * @todo To be removed when columns will be supported. No need to manually
    * set this.
    */
   protected function applyFieldDefaults($type, array &$values): void {
@@ -1356,6 +1353,13 @@ QUERY;
     // @see \Drupal\sparql_entity_storage\SparqlEntityStorage::doPreSave()
     // @see \Drupal\Core\Entity\EntityForm
     $entity->sparqlEntityOriginalGraph = $entity->get('graph')->target_id;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  protected function doLoadMultipleRevisionsFieldItems($revision_ids) {
+    return [];
   }
 
 }

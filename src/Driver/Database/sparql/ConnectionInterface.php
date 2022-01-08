@@ -2,7 +2,7 @@
 
 declare(strict_types = 1);
 
-namespace Drupal\sparql_entity_storage\Database\Driver\sparql;
+namespace Drupal\sparql_entity_storage\Driver\Database\sparql;
 
 use Drupal\Core\Database\Log;
 use EasyRdf\Graph;
